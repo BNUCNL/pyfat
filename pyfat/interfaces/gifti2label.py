@@ -4,6 +4,7 @@
 import nibabel as nib
 import numpy as np
 
+
 def gifti2label(label_gifti, white, label_number, label_label):
     label = nib.load(label_gifti)
     label_data = label.darrays

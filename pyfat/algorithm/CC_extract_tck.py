@@ -114,8 +114,8 @@ def extract_cc_step(imgtck):
     return L_temp_need, L_temp_n
 
 if __name__ == '__main__':
-    from rw.load import load_tck
-    from rw.save import save_tck
+    from pyfat.io.load import load_tck
+    from pyfat.io.save import save_tck
     # load data
     file = '/home/brain/workingdir/data/dwi/hcp/preprocessed/' \
            'response_dhollander/100206/Diffusion/100k_sift_1M45006_dynamic250.tck'

@@ -27,7 +27,7 @@ def show(lengths):
 
 
 if __name__ == '__main__':
-    from rw.load import load_tck, load_trk
+    from pyfat.io.load import load_tck, load_trk
     # tck
     fname_tck = '/home/brain/workingdir/data/dwi/hcp/preprocessed/' \
                 'response_dhollander/lr250_sift12_hcp_FFA_projabs-2.tck'
