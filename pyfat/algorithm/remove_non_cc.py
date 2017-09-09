@@ -17,8 +17,8 @@ def extract_up_z(img_cc):
     return L_temp
 
 if __name__ == '__main__':
-    from rw.load import load_tck
-    from rw.save import save_tck
+    from pyfat.io.load import load_tck
+    from pyfat.io.save import save_tck
     data_path = '/home/brain/workingdir/data/dwi/hcp/' \
                 'preprocessed/response_dhollander/100206/result/CC_fib.tck'
     # load tck data

@@ -24,7 +24,7 @@ def fib_density_map(volume, fiber, output):
 
 
 if __name__ == '__main__':
-    from rw.load import load_tck
+    from pyfat.io.load import load_tck
     img = nib.load("/home/brain/workingdir/data/dwi/hcp/preprocessed/"
                    "response_dhollander/100206/Structure/T1w_short.nii.gz")
     img_cc = load_tck('/home/brain/workingdir/data/dwi/hcp/preprocessed/'

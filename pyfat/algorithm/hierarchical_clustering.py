@@ -12,8 +12,8 @@ def hierarchical_clust(Ls_temp, n_clusters=2, affinity='euclidean', memory=None,
     return labels
 
 if __name__ == '__main__':
-    from rw.load import load_tck
-    from rw.save import save_tck
+    from pyfat.io.load import load_tck
+    from pyfat.io.save import save_tck
     from node_extract import xmin_extract
     import nibabel.streamlines.array_sequence as nibAS
     from sklearn.neighbors import kneighbors_graph

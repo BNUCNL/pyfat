@@ -65,7 +65,7 @@ def show(imgtck, clusters, out_path):
 
 
 if __name__ == '__mian__':
-    from rw.load import load_tck
+    from pyfat.io.load import load_tck
     from dipy.io.pickles import save_pickle
     from dipy.segment.clustering import QuickBundles
     from dipy.segment.metric import SumPointwiseEuclideanMetric
