@@ -41,13 +41,10 @@ def show_slice_density(img, Ls_temp):
         j = Ls[1]
         k = Ls[2]
         counts[j, k] += 1
+        print j, k
 
-    count = counts == 0
-    counts[count] = slice[count]
-    count1 = counts > 0
-    # ax.imshow(slice.T, cmap='gray', origin='lower')
     ax.imshow(slice.T, cmap='gray', origin='lower')
-    cax = ax.imshow(counts.T, cmap='gray', origin='lower') # camp=plt.cm.hot
+    cax = ax.imshow(counts.T, cmap=plt.cm.hot, origin='lower', alpha=0.6)  # camp=plt.cm.hot
     plt.colorbar(cax)
     plt.show()
 
@@ -63,14 +60,14 @@ if __name__ == '__main__':
                 'response_dhollander/100206/Structure/T1w_acpc_dc_restore_brain.nii.gz'
     img = nib.load(data_path)
     img_data = img.get_data()
-    print img.shape
-    print img_data
+    # print img.shape
+    # print img_data
     tck_path = '/home/brain/workingdir/data/dwi/hcp/' \
                'preprocessed/response_dhollander/100206/result/CC_fib_new.tck'
 
     imgtck = load_tck(tck_path)
     streamstck = imgtck.streamlines
-    print len(streamstck)
+    # print len(streamstck)
 
     # extract cc fib
     imgtck_fib = extract_cc(imgtck)
@@ -81,6 +78,6 @@ if __name__ == '__main__':
 
     # extract node according to x-value
     Ls_temp = xmin_extract(imgtck_fib)
-    print len(Ls_temp)
+    # print len(Ls_temp)
     # show node density
     show_slice_density(img, Ls_temp)
