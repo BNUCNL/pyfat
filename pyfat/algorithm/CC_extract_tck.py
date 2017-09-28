@@ -1,6 +1,7 @@
 # !/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import division
 import numpy as np
 import nibabel.streamlines.tck as nibtck
 import nibabel.streamlines.array_sequence as nibAS
@@ -112,39 +113,41 @@ def extract_cc_step(imgtck):
 
 def lr_number_cc(imgtck):
     '''
-    extract cc fiber
+    extract fiber
     :param streamlines:input wholeBrain fiber
-    :return: ArraySequence: extract cc fiber
+    :return: ArraySequence: extract fiber:the percentage of left and right hemispheres fiber points in [0.4, 2.5]
     '''
     L_temp_need = nibAS.ArraySequence()
     L_temp_n = nibAS.ArraySequence()
 
     if isinstance(imgtck, nibtck.TckFile):
         for i in range(len(imgtck.streamlines)):
-            for j in range(len(imgtck.streamlines[i]) - 1):
-                if imgtck.streamlines[i][j][0] * imgtck.streamlines[i][j + 1][0] < 0:
-                    if abs(len(imgtck.streamlines[i])-2*j-2) < 5:
-                        L_temp_need.append(imgtck.streamlines[i])
-                    else:
-                        L_temp_n.append(imgtck.streamlines[i])
+            if 0.4 < len(imgtck.streamlines[i][:, 0][imgtck.streamlines[i][:, 0] <= 0]) / \
+                    len(imgtck.streamlines[i][:, 0][imgtck.streamlines[i][:, 0] >= 0]) < 2.5:
+                L_temp_need.append(imgtck.streamlines[i])
+            else:
+                L_temp_n.append(imgtck.streamlines[i])
+
     if isinstance(imgtck, nibAS.ArraySequence):
         for i in range(len(imgtck)):
-            for j in range(len(imgtck[i]) - 1):
-                if imgtck[i][j][0] * imgtck[i][j + 1][0] < 0:
-                    if abs(len(imgtck[i]) - 2 * j - 2) < 5:
-                        L_temp_need.append(imgtck[i])
-                    else:
-                        L_temp_n.append(imgtck[i])
+            if 0.4 < len(imgtck[i][:, 0][imgtck[i][:, 0] <= 0]) / \
+                    len(imgtck[i][:, 0][imgtck[i][:, 0] >= 0]) < 2.5:
+                L_temp_need.append(imgtck[i])
+            else:
+                L_temp_n.append(imgtck[i])
+
     return L_temp_need, L_temp_n
 
 def xyz_gradient(imgtck):
     '''
-    extract cc fiber
+    extract fiber
     :param streamlines:input wholeBrain fiber
-    :return: ArraySequence: extract cc fiber
+    :return: ALS: extract AP LR SI orientation fiber
     '''
-    L_temp_need = nibAS.ArraySequence()
-    L_temp_n = nibAS.ArraySequence()
+    AP = nibAS.ArraySequence()
+    LR = nibAS.ArraySequence()
+    SI = nibAS.ArraySequence()
+    ALS = [AP, LR, SI]
 
     if isinstance(imgtck, nibtck.TckFile):
         for i in range(len(imgtck.streamlines)):
@@ -153,10 +156,8 @@ def xyz_gradient(imgtck):
             y_grad = grad[0][:, 1].sum()
             z_grad = grad[0][:, 2].sum()
 
-            if x_grad > y_grad and x_grad > z_grad:
-                L_temp_need.append(imgtck.streamlines[i])
-            else:
-                L_temp_n.append(imgtck.streamlines[i])
+            index = np.array([y_grad, x_grad, z_grad]).argmax()
+            ALS[index].append(imgtck.streamlines[i])
 
     if isinstance(imgtck, nibAS.ArraySequence):
         for i in range(len(imgtck)):
@@ -165,11 +166,10 @@ def xyz_gradient(imgtck):
             y_grad = grad[0][:, 1].sum()
             z_grad = grad[0][:, 2].sum()
 
-            if x_grad > y_grad and x_grad > z_grad:
-                L_temp_need.append(imgtck[i])
-            else:
-                L_temp_n.append(imgtck[i])
-    return L_temp_need, L_temp_n
+            index = np.array([y_grad, x_grad, z_grad]).argmax()
+            ALS[index].append(imgtck[i])
+
+    return ALS
 
 
 if __name__ == '__main__':
