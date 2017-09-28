@@ -38,30 +38,28 @@ def extract_multi_node(imgtck):
     if isinstance(imgtck, nibtck.TckFile):
         for i in range(len(imgtck.streamlines)):
             count = 0
-            if imgtck.streamlines[i][0][0] * imgtck.streamlines[i][-1][0] < 0:
-                for j in range(len(imgtck.streamlines[i]) - 1):
-                    if imgtck.streamlines[i][j][0] * imgtck.streamlines[i][j + 1][0] < 0:
-                        count += 1
-                    elif imgtck.streamlines[i][j][0] == 0:
-                        count += 1
-                if count == 1:
-                    L_temp_noly_node.append(imgtck.streamlines[i])
-                else:
-                    L_temp_multi_node.append(imgtck.streamlines[i])
+            for j in range(len(imgtck.streamlines[i]) - 1):
+                if imgtck.streamlines[i][j][0] * imgtck.streamlines[i][j + 1][0] < 0:
+                    count += 1
+                elif imgtck.streamlines[i][j][0] == 0:
+                    count += 1
+            if count == 1:
+                L_temp_noly_node.append(imgtck.streamlines[i])
+            else:
+                L_temp_multi_node.append(imgtck.streamlines[i])
 
     if isinstance(imgtck, nibAS.ArraySequence):
         for i in range(len(imgtck)):
             count = 0
-            if imgtck[i][0][0] * imgtck[i][-1][0] < 0:
-                for j in range(len(imgtck[i]) - 1):
-                    if imgtck[i][j][0] * imgtck[i][j + 1][0] < 0:
-                        count += 1
-                    elif imgtck[i][j][0] == 0:
-                        count += 1
-                if count == 1:
-                    L_temp_noly_node.append(imgtck[i])
-                else:
-                    L_temp_multi_node.append(imgtck[i])
+            for j in range(len(imgtck[i]) - 1):
+                if imgtck[i][j][0] * imgtck[i][j + 1][0] < 0:
+                    count += 1
+                elif imgtck[i][j][0] == 0:
+                    count += 1
+            if count == 1:
+                L_temp_noly_node.append(imgtck[i])
+            else:
+                L_temp_multi_node.append(imgtck[i])
     return L_temp_noly_node, L_temp_multi_node
 
 
@@ -76,41 +74,39 @@ def extract_cc_step(imgtck):
 
     if isinstance(imgtck, nibtck.TckFile):
         for i in range(len(imgtck.streamlines)):
-            if imgtck.streamlines[i][0][0] * imgtck.streamlines[i][-1][0] < 0:
-                for j in range(len(imgtck.streamlines[i]) - 1):
-                    if imgtck.streamlines[i][j][0] * imgtck.streamlines[i][j + 1][0] < 0:
-                        if (j - 20) in range(len(imgtck.streamlines[i])) \
-                                and (j + 20) in range(len(imgtck.streamlines[i])) \
-                                and imgtck.streamlines[i][j - 20][0] * imgtck.streamlines[i][j + 20][0] < 0:
-                            L_temp_need.append(imgtck.streamlines[i])
-                        else:
-                            L_temp_n.append(imgtck.streamlines[i])
-                    elif imgtck.streamlines[i][j][0] == 0:
-                        if (j - 20) in range(len(imgtck.streamlines[i])) \
-                                and (j + 20) in range(len(imgtck.streamlines[i])) \
-                                and imgtck.streamlines[i][j - 20][0] * imgtck.streamlines[i][j + 20][0] < 0:
-                            L_temp_need.append(imgtck.streamlines[i])
-                        else:
-                            L_temp_n.append(imgtck.streamlines[i])
+            for j in range(len(imgtck.streamlines[i]) - 1):
+                if imgtck.streamlines[i][j][0] * imgtck.streamlines[i][j + 1][0] < 0:
+                    if (j - 20) in range(len(imgtck.streamlines[i])) \
+                            and (j + 20) in range(len(imgtck.streamlines[i])) \
+                            and imgtck.streamlines[i][j - 20][0] * imgtck.streamlines[i][j + 20][0] < 0:
+                        L_temp_need.append(imgtck.streamlines[i])
+                    else:
+                        L_temp_n.append(imgtck.streamlines[i])
+                elif imgtck.streamlines[i][j][0] == 0:
+                    if (j - 20) in range(len(imgtck.streamlines[i])) \
+                            and (j + 20) in range(len(imgtck.streamlines[i])) \
+                            and imgtck.streamlines[i][j - 20][0] * imgtck.streamlines[i][j + 20][0] < 0:
+                        L_temp_need.append(imgtck.streamlines[i])
+                    else:
+                        L_temp_n.append(imgtck.streamlines[i])
 
     if isinstance(imgtck, nibAS.ArraySequence):
         for i in range(len(imgtck)):
-            if imgtck[i][0][0] * imgtck[i][-1][0] < 0:
-                for j in range(len(imgtck[i]) - 1):
-                    if imgtck[i][j][0] * imgtck[i][j + 1][0] < 0:
-                        if (j - 20) in range(len(imgtck[i])) \
-                                and (j + 20) in range(len(imgtck[i])) \
-                                and imgtck[i][j - 20][0] * imgtck[i][j + 20][0] < 0:
-                            L_temp_need.append(imgtck[i])
-                        else:
-                            L_temp_n.append(imgtck[i])
-                    elif imgtck[i][j][0] == 0:
-                        if (j - 20) in range(len(imgtck[i])) \
-                                and (j + 20) in range(len(imgtck[i])) \
-                                and imgtck[i][j - 20][0] * imgtck[i][j + 20][0] < 0:
-                            L_temp_need.append(imgtck[i])
-                        else:
-                            L_temp_n.append(imgtck[i])
+            for j in range(len(imgtck[i]) - 1):
+                if imgtck[i][j][0] * imgtck[i][j + 1][0] < 0:
+                    if (j - 20) in range(len(imgtck[i])) \
+                            and (j + 20) in range(len(imgtck[i])) \
+                            and imgtck[i][j - 20][0] * imgtck[i][j + 20][0] < 0:
+                        L_temp_need.append(imgtck[i])
+                    else:
+                        L_temp_n.append(imgtck[i])
+                elif imgtck[i][j][0] == 0:
+                    if (j - 20) in range(len(imgtck[i])) \
+                            and (j + 20) in range(len(imgtck[i])) \
+                            and imgtck[i][j - 20][0] * imgtck[i][j + 20][0] < 0:
+                        L_temp_need.append(imgtck[i])
+                    else:
+                        L_temp_n.append(imgtck[i])
 
     return L_temp_need, L_temp_n
 
@@ -125,22 +121,20 @@ def lr_number_cc(imgtck):
 
     if isinstance(imgtck, nibtck.TckFile):
         for i in range(len(imgtck.streamlines)):
-            if imgtck.streamlines[i][0][0] * imgtck.streamlines[i][-1][0] < 0:
-                for j in range(len(imgtck.streamlines[i]) - 1):
-                    if imgtck.streamlines[i][j][0] * imgtck.streamlines[i][j + 1][0] < 0:
-                        if abs(len(imgtck.streamlines[i])-2*j-2) < 5:
-                            L_temp_need.append(imgtck.streamlines[i])
-                        else:
-                            L_temp_n.append(imgtck.streamlines[i])
+            for j in range(len(imgtck.streamlines[i]) - 1):
+                if imgtck.streamlines[i][j][0] * imgtck.streamlines[i][j + 1][0] < 0:
+                    if abs(len(imgtck.streamlines[i])-2*j-2) < 5:
+                        L_temp_need.append(imgtck.streamlines[i])
+                    else:
+                        L_temp_n.append(imgtck.streamlines[i])
     if isinstance(imgtck, nibAS.ArraySequence):
         for i in range(len(imgtck)):
-            if imgtck[i][0][0] * imgtck[i][-1][0] < 0:
-                for j in range(len(imgtck[i]) - 1):
-                    if imgtck[i][j][0] * imgtck[i][j + 1][0] < 0:
-                        if abs(len(imgtck[i]) - 2 * j - 2) < 5:
-                            L_temp_need.append(imgtck[i])
-                        else:
-                            L_temp_n.append(imgtck[i])
+            for j in range(len(imgtck[i]) - 1):
+                if imgtck[i][j][0] * imgtck[i][j + 1][0] < 0:
+                    if abs(len(imgtck[i]) - 2 * j - 2) < 5:
+                        L_temp_need.append(imgtck[i])
+                    else:
+                        L_temp_n.append(imgtck[i])
     return L_temp_need, L_temp_n
 
 def xyz_gradient(imgtck):
@@ -154,17 +148,11 @@ def xyz_gradient(imgtck):
 
     if isinstance(imgtck, nibtck.TckFile):
         for i in range(len(imgtck.streamlines)):
-            if imgtck.streamlines[i][0][0] * imgtck.streamlines[i][-1][0] < 0:
-                for j in range(len(imgtck.streamlines[i]) - 1):
-                    if imgtck.streamlines[i][j][0] * imgtck.streamlines[i][j + 1][0] < 0:
-                        if j-5 in range(len(imgtck.streamlines[i])) and j+5 in range(len(imgtck.streamlines[i])):
-                            x = imgtck.streamlines[i][j-5:j+5, 0]
-                            y = imgtck.streamlines[i][j-5:j+5, 1]
-                            z = imgtck.streamlines[i][j-5:j+5, 2]
+            grad = np.gradient(imgtck.streamlines[i])
+            x_grad = grad[0][:, 0].sum()
+            y_grad = grad[0][:, 1].sum()
+            z_grad = grad[0][:, 2].sum()
 
-            x_grad = np.gradient(x).mean()
-            y_grad = np.gradient(y).mean()
-            z_grad = np.gradient(z).mean()
             if x_grad > y_grad and x_grad > z_grad:
                 L_temp_need.append(imgtck.streamlines[i])
             else:
@@ -172,18 +160,11 @@ def xyz_gradient(imgtck):
 
     if isinstance(imgtck, nibAS.ArraySequence):
         for i in range(len(imgtck)):
-            if imgtck[i][0][0] * imgtck[i][-1][0] < 0:
-                for j in range(len(imgtck[i]) - 1):
-                    if imgtck[i][j][0] * imgtck[i][j + 1][0] < 0:
-                        if j-5 in range(len(imgtck[i])) and j+5 in range(len(imgtck[i])):
-                            x = imgtck[i][j-5:j+5, 0]
-                            y = imgtck[i][j-5:j+5, 1]
-                            z = imgtck[i][j-5:j+5, 2]
+            grad = np.gradient(imgtck[i])
+            x_grad = grad[0][:, 0].sum()
+            y_grad = grad[0][:, 1].sum()
+            z_grad = grad[0][:, 2].sum()
 
-            # print x, y, z
-            x_grad = np.gradient(x).mean()
-            y_grad = np.gradient(y).mean()
-            z_grad = np.gradient(z).mean()
             if x_grad > y_grad and x_grad > z_grad:
                 L_temp_need.append(imgtck[i])
             else:
