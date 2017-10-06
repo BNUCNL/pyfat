@@ -44,4 +44,3 @@ class Metric(object):
         if isinstance(self.imgtck, nibAS.ArraySequence):
             self.count = len(self.imgtck)
         return self.count
-            
