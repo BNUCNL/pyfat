@@ -75,39 +75,21 @@ def extract_cc_step(imgtck):
 
     if isinstance(imgtck, nibtck.TckFile):
         for i in range(len(imgtck.streamlines)):
-            for j in range(len(imgtck.streamlines[i]) - 1):
-                if imgtck.streamlines[i][j][0] * imgtck.streamlines[i][j + 1][0] < 0:
-                    if (j - 20) in range(len(imgtck.streamlines[i])) \
-                            and (j + 20) in range(len(imgtck.streamlines[i])) \
-                            and imgtck.streamlines[i][j - 20][0] * imgtck.streamlines[i][j + 20][0] < 0:
-                        L_temp_need.append(imgtck.streamlines[i])
-                    else:
-                        L_temp_n.append(imgtck.streamlines[i])
-                elif imgtck.streamlines[i][j][0] == 0:
-                    if (j - 20) in range(len(imgtck.streamlines[i])) \
-                            and (j + 20) in range(len(imgtck.streamlines[i])) \
-                            and imgtck.streamlines[i][j - 20][0] * imgtck.streamlines[i][j + 20][0] < 0:
-                        L_temp_need.append(imgtck.streamlines[i])
-                    else:
-                        L_temp_n.append(imgtck.streamlines[i])
+            index = np.argmin(abs(imgtck.streamlines[i][:, 0]))
+            if (index - 20) in range(len(imgtck.streamlines[i])) \
+                    and (index + 20) in range(len(imgtck.streamlines[i])):
+                L_temp_need.append(imgtck.streamlines[i])
+            else:
+                L_temp_n.append(imgtck.streamlines[i])
 
     if isinstance(imgtck, nibAS.ArraySequence):
         for i in range(len(imgtck)):
-            for j in range(len(imgtck[i]) - 1):
-                if imgtck[i][j][0] * imgtck[i][j + 1][0] < 0:
-                    if (j - 20) in range(len(imgtck[i])) \
-                            and (j + 20) in range(len(imgtck[i])) \
-                            and imgtck[i][j - 20][0] * imgtck[i][j + 20][0] < 0:
-                        L_temp_need.append(imgtck[i])
-                    else:
-                        L_temp_n.append(imgtck[i])
-                elif imgtck[i][j][0] == 0:
-                    if (j - 20) in range(len(imgtck[i])) \
-                            and (j + 20) in range(len(imgtck[i])) \
-                            and imgtck[i][j - 20][0] * imgtck[i][j + 20][0] < 0:
-                        L_temp_need.append(imgtck[i])
-                    else:
-                        L_temp_n.append(imgtck[i])
+            index = np.argmin(abs(imgtck[i][:, 0]))
+            if (index - 20) in range(len(imgtck[i])) \
+                    and (index + 20) in range(len(imgtck[i])):
+                L_temp_need.append(imgtck[i])
+            else:
+                L_temp_n.append(imgtck[i])
 
     return L_temp_need, L_temp_n
 
@@ -122,26 +104,33 @@ def lr_number_cc(imgtck):
 
     if isinstance(imgtck, nibtck.TckFile):
         for i in range(len(imgtck.streamlines)):
-            if 0.4 < len(imgtck.streamlines[i][:, 0][imgtck.streamlines[i][:, 0] <= 0]) / \
-                    len(imgtck.streamlines[i][:, 0][imgtck.streamlines[i][:, 0] >= 0]) < 2.5:
+            rat = len(imgtck.streamlines[i][:, 0][imgtck.streamlines[i][:, 0] <= 0]) / \
+                  len(imgtck.streamlines[i][:, 0][imgtck.streamlines[i][:, 0] >= 0])
+            if rat < 1:
+                rat = 1 / rat
+            if rat < 2.5:
                 L_temp_need.append(imgtck.streamlines[i])
             else:
                 L_temp_n.append(imgtck.streamlines[i])
 
     if isinstance(imgtck, nibAS.ArraySequence):
         for i in range(len(imgtck)):
-            if 0.4 < len(imgtck[i][:, 0][imgtck[i][:, 0] <= 0]) / \
-                    len(imgtck[i][:, 0][imgtck[i][:, 0] >= 0]) < 2.5:
+            rat = len(imgtck[i][:, 0][imgtck[i][:, 0] <= 0]) / \
+                  len(imgtck[i][:, 0][imgtck[i][:, 0] >= 0])
+            if rat < 1:
+                rat = 1 / rat
+            if rat < 2.5:
                 L_temp_need.append(imgtck[i])
             else:
                 L_temp_n.append(imgtck[i])
 
     return L_temp_need, L_temp_n
 
-def xyz_gradient(imgtck):
+def xyz_gradient(imgtck, n=None):
     '''
     extract fiber
-    :param streamlines:input wholeBrain fiber
+    :param imgtck:input wholeBrain fiber
+    :param n:lr numbers
     :return: ALS: extract AP LR SI orientation fiber
     '''
     AP = nibAS.ArraySequence()
@@ -149,78 +138,51 @@ def xyz_gradient(imgtck):
     SI = nibAS.ArraySequence()
     ALS = [AP, LR, SI]
 
-    if isinstance(imgtck, nibtck.TckFile):
-        for i in range(len(imgtck.streamlines)):
-            grad = np.gradient(imgtck.streamlines[i])
-            x_grad = grad[0][:, 0].sum()
-            y_grad = grad[0][:, 1].sum()
-            z_grad = grad[0][:, 2].sum()
+    if n is None:
+        if isinstance(imgtck, nibtck.TckFile):
+            for i in range(len(imgtck.streamlines)):
+                grad = np.gradient(imgtck.streamlines[i])
+                x_grad = grad[0][:, 0].sum()
+                y_grad = grad[0][:, 1].sum()
+                z_grad = grad[0][:, 2].sum()
 
-            index = np.array([y_grad, x_grad, z_grad]).argmax()
-            ALS[index].append(imgtck.streamlines[i])
+                index = np.array([y_grad, x_grad, z_grad]).argmax()
+                ALS[index].append(imgtck.streamlines[i])
 
-    if isinstance(imgtck, nibAS.ArraySequence):
-        for i in range(len(imgtck)):
-            grad = np.gradient(imgtck[i])
-            x_grad = grad[0][:, 0].sum()
-            y_grad = grad[0][:, 1].sum()
-            z_grad = grad[0][:, 2].sum()
+        if isinstance(imgtck, nibAS.ArraySequence):
+            for i in range(len(imgtck)):
+                grad = np.gradient(imgtck[i])
+                x_grad = grad[0][:, 0].sum()
+                y_grad = grad[0][:, 1].sum()
+                z_grad = grad[0][:, 2].sum()
 
-            index = np.array([y_grad, x_grad, z_grad]).argmax()
-            ALS[index].append(imgtck[i])
+                index = np.array([y_grad, x_grad, z_grad]).argmax()
+                ALS[index].append(imgtck[i])
+    else:
+        if isinstance(imgtck, nibtck.TckFile):
+            for i in range(len(imgtck.streamlines)):
+                index = np.argmin(abs(imgtck.streamlines[i][:, 0]))
+                if (index - n) in range(len(imgtck.streamlines)) \
+                        and (index + n) in range(len(imgtck.streamlines)):
+                    grad = np.gradient(imgtck.streamlines[i][index - n:index + n, :])
+                    x_grad = grad[0][:, 0].sum()
+                    y_grad = grad[0][:, 1].sum()
+                    z_grad = grad[0][:, 2].sum()
+
+                    index = np.array([y_grad, x_grad, z_grad]).argmax()
+                    ALS[index].append(imgtck.streamlines[i])
+
+        if isinstance(imgtck, nibAS.ArraySequence):
+            for i in range(len(imgtck)):
+                index = np.argmin(abs(imgtck[i][:, 0]))
+                if (index - n) in range(len(imgtck)) \
+                        and (index + n) in range(len(imgtck)):
+                    grad = np.gradient(imgtck[i])
+                    x_grad = grad[0][:, 0].sum()
+                    y_grad = grad[0][:, 1].sum()
+                    z_grad = grad[0][:, 2].sum()
+
+                    index = np.array([y_grad, x_grad, z_grad]).argmax()
+                    ALS[index].append(imgtck[i])
 
     return ALS
-
-
-if __name__ == '__main__':
-    from pyfat.io.load import load_tck
-    from pyfat.io.save import save_tck
-    # load data
-    file = '/home/brain/workingdir/data/dwi/hcp/preprocessed/' \
-           'response_dhollander/100206/Diffusion/100k_sift_1M45006_dynamic250.tck'
-    imgtck = load_tck(file)
-
-
-    # extract CC
-    L_temp_need0 = extract_cc(imgtck)
-    L_temp_need1 = extract_multi_node(L_temp_need0)[0]
-    L_temp_need2 = xyz_gradient(L_temp_need1)[0]
-    # L_temp_need2 = lr_number_cc(L_temp_need1)[0]
-    # L_temp_need2 = extract_cc_step(L_temp_need1)[0]
-    # print L_temp
-
-    # none cc
-    L_temp_n1 = extract_multi_node(L_temp_need0)[1]
-    L_temp_n2 = xyz_gradient(L_temp_need0)[1]
-    L_temp_n3 = xyz_gradient(L_temp_need1)[1]
-    # L_temp_n2 = lr_number_cc(L_temp_need0)[1]
-    # L_temp_n3 = lr_number_cc(L_temp_need1)[1]
-    # L_temp_n2 = extract_cc_step(L_temp_need0)[1]
-    # L_temp_n3 = extract_cc_step(L_temp_need1)[1]
-
-    # save data
-
-    out_path = '/home/brain/workingdir/data/dwi/hcp/' \
-               'preprocessed/response_dhollander/100206/result_pipeline/fib_lr_term_step1.tck'
-    save_tck(L_temp_need0, imgtck.header, imgtck.tractogram.data_per_streamline,
-         imgtck.tractogram.data_per_point, imgtck.tractogram.affine_to_rasmm, out_path)
-    out_path1 = '/home/brain/workingdir/data/dwi/hcp/' \
-               'preprocessed/response_dhollander/100206/result_pipeline/fib_only_node_step2.tck'
-    save_tck(L_temp_need1, imgtck.header, imgtck.tractogram.data_per_streamline,
-             imgtck.tractogram.data_per_point, imgtck.tractogram.affine_to_rasmm, out_path1)
-    out_path2 = '/home/brain/workingdir/data/dwi/hcp/' \
-               'preprocessed/response_dhollander/100206/result_pipeline/fib_xyz_gradient_step3.tck'
-    save_tck(L_temp_need2, imgtck.header, imgtck.tractogram.data_per_streamline,
-             imgtck.tractogram.data_per_point, imgtck.tractogram.affine_to_rasmm, out_path2)
-    out_path3 = '/home/brain/workingdir/data/dwi/hcp/' \
-               'preprocessed/response_dhollander/100206/result_pipeline/fib_multi_node_step1.tck'
-    save_tck(L_temp_n1, imgtck.header, imgtck.tractogram.data_per_streamline,
-             imgtck.tractogram.data_per_point, imgtck.tractogram.affine_to_rasmm, out_path3)
-    out_path4 = '/home/brain/workingdir/data/dwi/hcp/' \
-               'preprocessed/response_dhollander/100206/result_pipeline/fib_xyz_gradient_not_step2.tck'
-    save_tck(L_temp_n2, imgtck.header, imgtck.tractogram.data_per_streamline,
-             imgtck.tractogram.data_per_point, imgtck.tractogram.affine_to_rasmm, out_path4)
-    out_path5 = '/home/brain/workingdir/data/dwi/hcp/' \
-               'preprocessed/response_dhollander/100206/result_pipeline/fib_only_node_xyz_gradient_not_step3.tck'
-    save_tck(L_temp_n3, imgtck.header, imgtck.tractogram.data_per_streamline,
-             imgtck.tractogram.data_per_point, imgtck.tractogram.affine_to_rasmm, out_path5)
