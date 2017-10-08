@@ -5,7 +5,7 @@
 from scipy.spatial.distance import pdist, squareform
 from dipy.tracking.utils import length
 import nibabel.streamlines.tck as nibtck
-import nibabel.streamlines.array_sequence as nibAS
+import nibabel.streamlines.array_sequence as nibas
 
 
 def coordinate_dist(coordinate, metric='euclidean'):
@@ -41,6 +41,6 @@ class Metric(object):
     def count(self):
         if isinstance(self.imgtck, nibtck.TckFile):
             self.count = len(self.imgtck.streamlines)
-        if isinstance(self.imgtck, nibAS.ArraySequence):
+        if isinstance(self.imgtck, nibas.ArraySequence):
             self.count = len(self.imgtck)
         return self.count

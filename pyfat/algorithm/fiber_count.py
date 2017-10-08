@@ -7,6 +7,11 @@ import matplotlib.pyplot as plt
 
 # count fiber lengths
 def fib_lengths_count(stream):
+    """
+    compute fiber lengths
+    :param stream: input streamsline
+    :return: fiber length
+    """
     lengths = length(stream)
     return lengths
 
