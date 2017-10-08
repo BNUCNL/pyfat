@@ -7,13 +7,13 @@ import dipy.tracking.utils as ditu
 
 # fiber density of volume
 def fib_density_map(volume, fiber, output):
-    '''
+    """
     fiber density map
     :param volume: structure image T1w
     :param fiber: tck file
     :param output: density map file
     :return:
-    '''
+    """
     shape = volume.shape
     affine = volume.affine
     streamstck = fiber.streamlines
