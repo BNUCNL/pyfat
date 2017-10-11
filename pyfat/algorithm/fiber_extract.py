@@ -38,29 +38,54 @@ def extract_multi_node(imgtck):
 
     if isinstance(imgtck, nibtck.TckFile):
         for i in range(len(imgtck.streamlines)):
-            count = 0
-            for j in range(len(imgtck.streamlines[i]) - 1):
-                if imgtck.streamlines[i][j][0] * imgtck.streamlines[i][j + 1][0] < 0:
-                    count += 1
-                elif imgtck.streamlines[i][j][0] == 0:
-                    count += 1
-            if count == 1:
+            l = imgtck.streamlines[i][:, 0]
+            l_ahead = list(l[:])
+            a = l_ahead.pop(0)
+            l_ahead.append(a)
+            x_stemp = np.array([l, l_ahead])
+            x_stemp_index = x_stemp.prod(axis=0)
+            if len(np.argwhere(x_stemp_index < 0)) == 2 \
+                    or len(np.argwhere(x_stemp_index == 0)) == 2:
                 L_temp_noly_node.append(imgtck.streamlines[i])
             else:
                 L_temp_multi_node.append(imgtck.streamlines[i])
 
+            # count = 0
+            # for j in range(len(imgtck.streamlines[i]) - 1):
+            #     if imgtck.streamlines[i][j][0] * imgtck.streamlines[i][j + 1][0] < 0:
+            #         count += 1
+            #     elif imgtck.streamlines[i][j][0] == 0:
+            #         count += 1
+            # if count == 1:
+            #     L_temp_noly_node.append(imgtck.streamlines[i])
+            # else:
+            #     L_temp_multi_node.append(imgtck.streamlines[i])
+
     if isinstance(imgtck, nibas.ArraySequence):
         for i in range(len(imgtck)):
-            count = 0
-            for j in range(len(imgtck[i]) - 1):
-                if imgtck[i][j][0] * imgtck[i][j + 1][0] < 0:
-                    count += 1
-                elif imgtck[i][j][0] == 0:
-                    count += 1
-            if count == 1:
+            l = imgtck[i][:, 0]
+            l_ahead = list(l[:])
+            a = l_ahead.pop(0)
+            l_ahead.append(a)
+            x_stemp = np.array([l, l_ahead])
+            x_stemp_index = x_stemp.prod(axis=0)
+            if len(np.argwhere(x_stemp_index < 0)) == 2 \
+                    or len(np.argwhere(x_stemp_index == 0)) == 2:
                 L_temp_noly_node.append(imgtck[i])
             else:
                 L_temp_multi_node.append(imgtck[i])
+
+            # count = 0
+            # for j in range(len(imgtck[i]) - 1):
+            #     if imgtck[i][j][0] * imgtck[i][j + 1][0] < 0:
+            #         count += 1
+            #     elif imgtck[i][j][0] == 0:
+            #         count += 1
+            # if count == 1:
+            #     L_temp_noly_node.append(imgtck[i])
+            # else:
+            #     L_temp_multi_node.append(imgtck[i])
+
     return L_temp_noly_node, L_temp_multi_node
 
 
@@ -76,25 +101,59 @@ def extract_lr_step(imgtck, n=20):
 
     if isinstance(imgtck, nibtck.TckFile):
         for i in range(len(imgtck.streamlines)):
-            index = np.argmin(abs(imgtck.streamlines[i][:, 0]))
-            if (index - n) in range(len(imgtck.streamlines[i])) \
-                    and (index + n) in range(len(imgtck.streamlines[i])):
+            l = imgtck.streamlines[i][:, 0]
+            l_ahead = list(l[:])
+            a = l_ahead.pop(0)
+            l_ahead.append(a)
+            x_stemp = np.array([l, l_ahead])
+            x_stemp_index = x_stemp.prod(axis=0)
+            index0 = np.argwhere(x_stemp_index <= 0)
+            index_term = np.argmin((abs(imgtck.streamlines[i][index0[0]][0]),
+                                    abs(imgtck.streamlines[i][index0[0] + 1][0])))
+            index = index0[0] + index_term
+            if index - n in range(len(l)) \
+                    and index + n in range(len(l)):
                 L_temp_need.append(imgtck.streamlines[i])
             else:
                 L_temp_n.append(imgtck.streamlines[i])
 
+            # # index = np.argmin(abs(imgtck.streamlines[i][:, 0]))
+            # for j in range(len(imgtck.streamlines[i]) - 1):
+            #     if imgtck.streamlines[i][j][0] * imgtck.streamlines[i][j+1][0] <= 0:
+            #         if (j - n) in range(len(imgtck.streamlines[i])) \
+            #                 and (j + n) in range(len(imgtck.streamlines[i])):
+            #             L_temp_need.append(imgtck.streamlines[i])
+            #         else:
+            #             L_temp_n.append(imgtck.streamlines[i])
+
     if isinstance(imgtck, nibas.ArraySequence):
         for i in range(len(imgtck)):
-            index = np.argmin(abs(imgtck[i][:, 0]))
-            if (index - n) in range(len(imgtck[i])) \
-                    and (index + n) in range(len(imgtck[i])):
+            l = imgtck[i][:, 0]
+            l_ahead = list(l[:])
+            a = l_ahead.pop(0)
+            l_ahead.append(a)
+            x_stemp = np.array([l, l_ahead])
+            x_stemp_index = x_stemp.prod(axis=0)
+            index0 = np.argwhere(x_stemp_index <= 0)
+            index_term = np.argmin((abs(imgtck[i][index0[0]][0]),
+                                    abs(imgtck[i][index0[0] + 1][0])))
+            index = index0[0] + index_term
+            if index - n in range(len(l)) \
+                    and index + n in range(len(l)):
                 L_temp_need.append(imgtck[i])
             else:
                 L_temp_n.append(imgtck[i])
 
+            # index = np.argmin(abs(imgtck[i][:, 0]))
+            # if (index - n) in range(len(imgtck[i])) \
+            #         and (index + n) in range(len(imgtck[i])):
+            #     L_temp_need.append(imgtck[i])
+            # else:
+            #     L_temp_n.append(imgtck[i])
+
     return L_temp_need, L_temp_n
 
-def extract_lr_rat(imgtck, ratio=2.5):
+def extract_lr_rat(imgtck, ratio=2.0):
     """
     extract lr ratio fiber
     :param imgtck:input wholeBrain fiber
@@ -162,9 +221,18 @@ def extract_xyz_gradient(imgtck, n=None):
     else:
         if isinstance(imgtck, nibtck.TckFile):
             for i in range(len(imgtck.streamlines)):
-                index = np.argmin(abs(imgtck.streamlines[i][:, 0]))
-                if (index - n) in range(len(imgtck.streamlines)) \
-                        and (index + n) in range(len(imgtck.streamlines)):
+                l = imgtck.streamlines[i][:, 0]
+                l_ahead = list(l[:])
+                a = l_ahead.pop(0)
+                l_ahead.append(a)
+                x_stemp = np.array([l, l_ahead])
+                x_stemp_index = x_stemp.prod(axis=0)
+                index0 = np.argwhere(x_stemp_index <= 0)
+                index_term = np.argmin((abs(imgtck.streamlines[i][index0[0]][0]),
+                                        abs(imgtck.streamlines[i][index0[0] + 1][0])))
+                index = index0[0] + index_term
+                if (index - n) in range(len(l)) \
+                        and (index + n) in range(len(l)):
                     grad = np.gradient(imgtck.streamlines[i][index - n:index + n, :])
                     x_grad = grad[0][:, 0].sum()
                     y_grad = grad[0][:, 1].sum()
@@ -175,9 +243,18 @@ def extract_xyz_gradient(imgtck, n=None):
 
         if isinstance(imgtck, nibas.ArraySequence):
             for i in range(len(imgtck)):
-                index = np.argmin(abs(imgtck[i][:, 0]))
-                if (index - n) in range(len(imgtck)) \
-                        and (index + n) in range(len(imgtck)):
+                l = imgtck[i][:, 0]
+                l_ahead = list(l[:])
+                a = l_ahead.pop(0)
+                l_ahead.append(a)
+                x_stemp = np.array([l, l_ahead])
+                x_stemp_index = x_stemp.prod(axis=0)
+                index0 = np.argwhere(x_stemp_index <= 0)
+                index_term = np.argmin((abs(imgtck[i][index0[0]][0]),
+                                        abs(imgtck.streamlines[i][index0[0] + 1][0])))
+                index = index0[0] + index_term
+                if (index - n) in range(len(l)) \
+                        and (index + n) in range(len(l)):
                     grad = np.gradient(imgtck[i])
                     x_grad = grad[0][:, 0].sum()
                     y_grad = grad[0][:, 1].sum()
