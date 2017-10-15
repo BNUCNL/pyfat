@@ -24,10 +24,10 @@ def xmin_extract(streams):
             x_stemp = np.array([l, l_ahead])
             x_stemp_index = x_stemp.prod(axis=0)
             index0 = np.argwhere(x_stemp_index <= 0)
-            index_term = np.argmin((abs(streams.streamlines[i][index0[0]][0]),
-                                    abs(streams.streamlines[i][index0[0]+1][0])))
-            index = index0[0] + index_term
-            Ls_temp.append(streams.streamlines[i][index][0])
+            index_term = np.argmin((abs(streams.streamlines[i][index0[0][0]][0]),
+                                    abs(streams.streamlines[i][index0[0][0]+1][0])))
+            index = index0[0][0] + index_term
+            Ls_temp.append(streams.streamlines[i][index])
 
     if isinstance(streams, nibas.ArraySequence):
         for i in range(len(streams)):
@@ -38,9 +38,9 @@ def xmin_extract(streams):
             x_stemp = np.array([l, l_ahead])
             x_stemp_index = x_stemp.prod(axis=0)
             index0 = np.argwhere(x_stemp_index <= 0)
-            index_term = np.argmin((abs(streams[i][index0[0]][0]),
-                                    abs(streams[i][index0[0] + 1][0])))
-            index = index0[0] + index_term
-            Ls_temp.append(streams[i][index][0])
+            index_term = np.argmin((abs(streams[i][index0[0][0]][0]),
+                                    abs(streams[i][index0[0][0] + 1][0])))
+            index = index0[0][0] + index_term
+            Ls_temp.append(streams[i][index])
 
     return Ls_temp
