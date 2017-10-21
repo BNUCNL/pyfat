@@ -61,4 +61,9 @@ class Metric(object):
         return Metric(set_length_max_fib)
 
     def fib_merge(self, stream):
-        pass
+        ars = nibas.ArraySequence()
+        for i in self.streamlines:
+            ars.append(i)
+        for j in stream:
+            ars.append(j)
+        return Metric(ars)

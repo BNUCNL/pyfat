@@ -16,12 +16,10 @@ def show_2d_node(img, Ls_temp):
     ax.set_title('y_z distribution')
     plt.show()
 
-def show_dist_matrix(img, sdist):
+def show_dist_matrix(sdist):
     name = range(sdist.shape[0])
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    # slice = img.get_data()[img.shape[0] / 2, :, :]
-    # ax.imshow(slice.T, cmap='gray', origin='lower')
     cax = ax.matshow(sdist, vmin=sdist.min(), vmax=sdist.max())
     fig.colorbar(cax)
     ticks = np.arange(0, sdist.shape[0], 1)

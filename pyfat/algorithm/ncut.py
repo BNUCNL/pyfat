@@ -147,4 +147,5 @@ def get_labels(eigenvec_discrete):
     eigenvec_discrete = eigenvec_discrete.todense()
     eigenvec_discrete = np.array(eigenvec_discrete)
     labels = np.argmax(eigenvec_discrete, axis=1)
+    labels += 1
     return labels
