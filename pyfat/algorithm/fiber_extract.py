@@ -108,9 +108,9 @@ def extract_lr_step(imgtck, n=20):
             x_stemp = np.array([l, l_ahead])
             x_stemp_index = x_stemp.prod(axis=0)
             index0 = np.argwhere(x_stemp_index <= 0)
-            index_term = np.argmin((abs(imgtck.streamlines[i][index0[0]][0]),
-                                    abs(imgtck.streamlines[i][index0[0] + 1][0])))
-            index = index0[0] + index_term
+            index_term = np.argmin((abs(imgtck.streamlines[i][index0[0][0]][0]),
+                                    abs(imgtck.streamlines[i][index0[0][0] + 1][0])))
+            index = index0[0][0] + index_term
             if index - n in range(len(l)) \
                     and index + n in range(len(l)):
                 L_temp_need.append(imgtck.streamlines[i])
@@ -135,9 +135,9 @@ def extract_lr_step(imgtck, n=20):
             x_stemp = np.array([l, l_ahead])
             x_stemp_index = x_stemp.prod(axis=0)
             index0 = np.argwhere(x_stemp_index <= 0)
-            index_term = np.argmin((abs(imgtck[i][index0[0]][0]),
-                                    abs(imgtck[i][index0[0] + 1][0])))
-            index = index0[0] + index_term
+            index_term = np.argmin((abs(imgtck[i][index0[0][0]][0]),
+                                    abs(imgtck[i][index0[0][0] + 1][0])))
+            index = index0[0][0] + index_term
             if index - n in range(len(l)) \
                     and index + n in range(len(l)):
                 L_temp_need.append(imgtck[i])
@@ -228,9 +228,9 @@ def extract_xyz_gradient(imgtck, n=None):
                 x_stemp = np.array([l, l_ahead])
                 x_stemp_index = x_stemp.prod(axis=0)
                 index0 = np.argwhere(x_stemp_index <= 0)
-                index_term = np.argmin((abs(imgtck.streamlines[i][index0[0]][0]),
-                                        abs(imgtck.streamlines[i][index0[0] + 1][0])))
-                index = index0[0] + index_term
+                index_term = np.argmin((abs(imgtck.streamlines[i][index0[0][0]][0]),
+                                        abs(imgtck.streamlines[i][index0[0][0] + 1][0])))
+                index = index0[0][0] + index_term
                 if (index - n) in range(len(l)) \
                         and (index + n) in range(len(l)):
                     grad = np.gradient(imgtck.streamlines[i][index - n:index + n, :])
@@ -250,9 +250,9 @@ def extract_xyz_gradient(imgtck, n=None):
                 x_stemp = np.array([l, l_ahead])
                 x_stemp_index = x_stemp.prod(axis=0)
                 index0 = np.argwhere(x_stemp_index <= 0)
-                index_term = np.argmin((abs(imgtck[i][index0[0]][0]),
-                                        abs(imgtck.streamlines[i][index0[0] + 1][0])))
-                index = index0[0] + index_term
+                index_term = np.argmin((abs(imgtck[i][index0[0][0]][0]),
+                                        abs(imgtck.streamlines[i][index0[0][0] + 1][0])))
+                index = index0[0][0] + index_term
                 if (index - n) in range(len(l)) \
                         and (index + n) in range(len(l)):
                     grad = np.gradient(imgtck[i])

@@ -4,6 +4,7 @@
 
 from scipy.spatial.distance import pdist, squareform
 from dipy.tracking.utils import length
+import numpy as np
 import nibabel.streamlines.tck as nibtck
 import nibabel.streamlines.array_sequence as nibas
 
@@ -29,18 +30,40 @@ def coordinate_dist(coordinate, metric='euclidean'):
 
 
 class Metric(object):
-    def __init__(self, imgtck):
-        self.imgtck = imgtck
-        self.lengths = None
-        self.count = None
+    def __init__(self, streamlines):
+        self.streamlines = streamlines
+        self.lengths = self.length()
+        self.counts = self.count()
+        self.lengths_min = self.length_min()
 
     def length(self):
-        self.lengths = length(self.imgtck)
-        return self.lengths
+        lengths = np.array(list(length(self.streamlines)))
+        return lengths
 
     def count(self):
-        if isinstance(self.imgtck, nibtck.TckFile):
-            self.count = len(self.imgtck.streamlines)
-        if isinstance(self.imgtck, nibas.ArraySequence):
-            self.count = len(self.imgtck)
-        return self.count
+        counts = len(self.streamlines)
+        return counts
+
+    def length_min(self):
+        return self.lengths.min()
+
+    def length_max(self):
+        return self.lengths.max()
+
+    def set_length_min(self, min_value):
+        index = self.lengths >= min_value
+        set_length_min_fib = self.streamlines[index]
+        return Metric(set_length_min_fib)
+
+    def set_length_max(self, max_value):
+        index = self.lengths <= max_value
+        set_length_max_fib = self.streamlines[index]
+        return Metric(set_length_max_fib)
+
+    def fib_merge(self, stream):
+        ars = nibas.ArraySequence()
+        for i in self.streamlines:
+            ars.append(i)
+        for j in stream:
+            ars.append(j)
+        return Metric(ars)
