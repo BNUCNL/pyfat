@@ -35,11 +35,11 @@ def show_slice_density(img, Ls_temp):
     Ls_temp.T[0] = 0
     Ls_temp = apply_affine(npl.inv(img.affine), Ls_temp)
     slice = img.get_data()[img.shape[0]/2, :, :]
-    counts = np.zeros(slice.shape, 'float')
+    counts = np.zeros(slice.shape)
     for Ls in Ls_temp:
         j = Ls[1]
         k = Ls[2]
-        counts[j, k] += 1
+        counts[int(j), int(k)] += 1
         print j, k
 
     counts[counts == 0.0] = np.nan

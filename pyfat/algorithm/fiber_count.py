@@ -16,13 +16,14 @@ def fib_lengths_count(stream):
     return lengths
 
 # show
-def show(lengths):
+def show(lengths, x=180, y=10000, title='Length histogram', xlabel='Length', ylabel='Count'):
     plt.figure('Fiber statistics')
     plt.subplot(111)
-    plt.title('Length histogram')
+    plt.title(title)
     plt.hist(lengths, color='burlywood')
-    plt.xlabel('Length')
-    plt.ylabel('Count')
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.text(x, y, 'fiber_count=%d' % len(lengths), fontsize=10)
 
     # save length histogram
     # plt.legend()
