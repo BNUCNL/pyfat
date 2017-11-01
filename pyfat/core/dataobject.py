@@ -11,7 +11,7 @@ class Fasciculus(object):
     def __init__(self, source, header=None, lengths_min=None, lengths_max=None,
                  data_per_streamline=None, data_per_point=None, affine_to_rasmm=None):
         """
-        Create a dataset  from an TckFile which has following attributes:
+        Create a dataset  from a TckFile which has following attributes:
 
         Parameters
         ----------
@@ -60,17 +60,17 @@ class Fasciculus(object):
             if isinstance(data_per_streamline, nibtcg.PerArrayDict):
                 self._data_per_streamline = data_per_streamline
             else:
-                raise ValueError("data_per_streamline must be a object of "
+                raise ValueError("data_per_streamline must be an object of "
                                  "class nibabel.streamlines.tractogram.PerArrayDict.")
             if isinstance(data_per_point, nibtcg.PerArraySequenceDict):
                 self._data_per_point = data_per_point
             else:
-                raise ValueError("data_per_point must be a object of "
+                raise ValueError("data_per_point must be an object of "
                                  "class nibabel.streamlines.tractogram.PerArraySequenceDict.")
-            if affine_to_rasmm is None:
-                self._affine_to_rasmm = self._header['voxel_to_rasmm']
-            else:
+            if affine_to_rasmm:
                 self._affine_to_rasmm = affine_to_rasmm
+            else:
+                self._affine_to_rasmm = self._header['voxel_to_rasmm']
         else:
             self._img = nibtck.TckFile.load(source)
             self._header = self._img.header
