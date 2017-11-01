@@ -52,7 +52,7 @@ class Fasciculus(object):
             self._data = source
             if not isinstance(header, dict):
                 raise ValueError("Parameter header must be specified!")
-            elif header['nb_streamlines'] == len(source):
+            elif source.data.shape[1] == 3:
                 self._header = header
                 self._img = None
             else:
@@ -93,6 +93,10 @@ class Fasciculus(object):
         self._labels = len(self._data)*[None]
         # dict(self._label, self._data)
         self._labels_data = dict(zip(self._labels, self._data))
+        # x,y,z gradient
+        self._x_gradient = self.get_x_gradient()
+        self._y_gradient = self.get_y_gradient()
+        self._z_gradient = self.get_z_gradient()
 
         if lengths_min is None:
             self._lengths_min = self.get_lengths_min()
@@ -157,6 +161,45 @@ class Fasciculus(object):
                 ValueError("max_value is not in the range of length_min to length_max.")
         except ValueError:
             print "min_value must be a number."
+
+    def get_x_gradient(self):
+        x_gradient = nibtck.ArraySequence()
+        for i in range(len(self._data)):
+            x = self._data[i][:, 0]
+            x_ahead = list(x[:])
+            a = x_ahead.pop(0)
+            x_ahead.append(a)
+            x_stemp = np.array([x, x_ahead])
+            x_gradient_list = x_stemp[1, :] - x_stemp[0, :]
+            x_gradient_sum = x_gradient_list[:-2].sum()
+            x_gradient.append(np.abs(x_gradient_sum))
+        return x_gradient
+
+    def get_y_gradient(self):
+        y_gradient = nibtck.ArraySequence()
+        for i in range(len(self._data)):
+            y = self._data[i][:, 1]
+            y_ahead = list(y[:])
+            a = y_ahead.pop(0)
+            y_ahead.append(a)
+            y_stemp = np.array([y, y_ahead])
+            y_gradient_list = y_stemp[1, :] - y_stemp[0, :]
+            y_gradient_sum = y_gradient_list[:-2].sum()
+            y_gradient.append(np.abs(y_gradient_sum))
+        return y_gradient
+
+    def get_z_gradient(self):
+        z_gradient = nibtck.ArraySequence()
+        for i in range(len(self._data)):
+            z = self._data[i][:, 2]
+            z_ahead = list(z[:])
+            a = z_ahead.pop(0)
+            z_ahead.append(a)
+            z_stemp = np.array([z, z_ahead])
+            z_gradient_list = z_stemp[1, :] - z_stemp[0, :]
+            z_gradient_sum = z_gradient_list[:-2].sum()
+            z_gradient.append(np.abs(z_gradient_sum))
+        return z_gradient
 
     def save2tck(self, file_path):
         """Save to a tck file"""
