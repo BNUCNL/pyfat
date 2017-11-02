@@ -110,8 +110,20 @@ class Fasciculus(object):
         else:
             self._lengths_max = lengths_max
 
+    def get_header(self):
+        return self._header
+
+    def update_header(self):
+        pass
+
     def get_data(self):
         return self._data
+
+    def set_data(self, data):
+        if isinstance(data, nibtck.ArraySequence):
+            self._data = data
+        else:
+            raise ValueError("Data must be an object nibtck.ArraySequence.")
 
     def get_space(self):
         key = []
@@ -143,31 +155,31 @@ class Fasciculus(object):
         counts = len(self._data)
         return counts
 
+    def get_labes(self):
+        return self._labels
+
+    def get_labels_data(self):
+        return self._labels_data
+
     def set_lengths_min(self, min_value):
-        try:
-            min_value = float(min_value)
-            if self.get_lengths_min() <= min_value <= self.get_lengths_max():
-                self._lengths_min = min_value
-                index = self._lengths >= min_value
-                self._data = self._data[index]
-                self._lengths = self.get_lengths()
-            else:
-                ValueError("min_value is not in the range of length_min to length_max.")
-        except ValueError:
-            print "min_value must be a number."
+        min_value = float(min_value)
+        if self.get_lengths_min() <= min_value <= self.get_lengths_max():
+            self._lengths_min = min_value
+            index = self._lengths >= min_value
+            self._data = self._data[index]
+            self._lengths = self.get_lengths()
+        else:
+            raise ValueError("min_value must be in the range of %s to %s." % (self._lengths_min, self._lengths_max))
 
     def set_lengths_max(self, max_value):
-        try:
-            max_value = float(max_value)
-            if self.get_lengths_min() <= max_value <= self.get_lengths_max():
-                self._lengths_max = max_value
-                index = self._lengths <= max_value
-                self._data = self._data[index]
-                self._lengths = self.get_lengths()
-            else:
-                ValueError("max_value is not in the range of length_min to length_max.")
-        except ValueError:
-            print "min_value must be a number."
+        max_value = float(max_value)
+        if self.get_lengths_min() <= max_value <= self.get_lengths_max():
+            self._lengths_max = max_value
+            index = self._lengths <= max_value
+            self._data = self._data[index]
+            self._lengths = self.get_lengths()
+        else:
+            raise ValueError("max_value must be in the range of %s to %s." % (self._lengths_min, self._lengths_max))
 
     def get_x_gradient(self):
         x_gradient = []
@@ -211,6 +223,19 @@ class Fasciculus(object):
     def get_mean_curvature(self):
         mean_curvature = [dtm.mean_curvature(stream) for stream in self._data]
         return mean_curvature
+
+    def set_labels(self, labels):
+        if len(labels) == len(self._labels):
+            self._labels = labels
+        else:
+            raise ValueError("Data dimension does not match.")
+
+    def set_labels_data(self, labels):
+        if len(labels) == len(self._data):
+            self._labels = labels
+            self._labels_data = zip(self._labels, self._data)
+        else:
+            raise ValueError("Data dimension does not match.")
 
     def save2tck(self, file_path):
         """Save to a tck file"""
