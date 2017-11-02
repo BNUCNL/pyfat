@@ -5,6 +5,7 @@ import numpy as np
 import nibabel.streamlines.tractogram as nibtcg
 from dipy.tracking.utils import length
 import nibabel.streamlines.tck as nibtck
+import dipy.tracking.metrics as dtm
 
 class Fasciculus(object):
     """Base attributes of the fasciculus"""
@@ -92,11 +93,13 @@ class Fasciculus(object):
         # labes
         self._labels = len(self._data)*[None]
         # dict(self._label, self._data)
-        self._labels_data = dict(zip(self._labels, self._data))
+        self._labels_data = zip(self._labels, self._data)
         # x,y,z gradient
         self._x_gradient = self.get_x_gradient()
         self._y_gradient = self.get_y_gradient()
         self._z_gradient = self.get_z_gradient()
+        # mean curvature
+        self._mean_curvature = self.get_mean_curvature()
 
         if lengths_min is None:
             self._lengths_min = self.get_lengths_min()
@@ -107,12 +110,14 @@ class Fasciculus(object):
         else:
             self._lengths_max = lengths_max
 
+    def get_data(self):
+        return self._data
+
     def get_space(self):
+        key = []
         for x in self._header.items():
             if isinstance(x[1], np.ndarray):
                 key = x[0]
-            else:
-                key = None
         if key:
             return key[9:12]
         else:
@@ -145,6 +150,7 @@ class Fasciculus(object):
                 self._lengths_min = min_value
                 index = self._lengths >= min_value
                 self._data = self._data[index]
+                self._lengths = self.get_lengths()
             else:
                 ValueError("min_value is not in the range of length_min to length_max.")
         except ValueError:
@@ -157,13 +163,14 @@ class Fasciculus(object):
                 self._lengths_max = max_value
                 index = self._lengths <= max_value
                 self._data = self._data[index]
+                self._lengths = self.get_lengths()
             else:
                 ValueError("max_value is not in the range of length_min to length_max.")
         except ValueError:
             print "min_value must be a number."
 
     def get_x_gradient(self):
-        x_gradient = nibtck.ArraySequence()
+        x_gradient = []
         for i in range(len(self._data)):
             x = self._data[i][:, 0]
             x_ahead = list(x[:])
@@ -176,7 +183,7 @@ class Fasciculus(object):
         return x_gradient
 
     def get_y_gradient(self):
-        y_gradient = nibtck.ArraySequence()
+        y_gradient = []
         for i in range(len(self._data)):
             y = self._data[i][:, 1]
             y_ahead = list(y[:])
@@ -189,7 +196,7 @@ class Fasciculus(object):
         return y_gradient
 
     def get_z_gradient(self):
-        z_gradient = nibtck.ArraySequence()
+        z_gradient = []
         for i in range(len(self._data)):
             z = self._data[i][:, 2]
             z_ahead = list(z[:])
@@ -200,6 +207,10 @@ class Fasciculus(object):
             z_gradient_sum = z_gradient_list[:-2].sum()
             z_gradient.append(np.abs(z_gradient_sum))
         return z_gradient
+
+    def get_mean_curvature(self):
+        mean_curvature = [dtm.mean_curvature(stream) for stream in self._data]
+        return mean_curvature
 
     def save2tck(self, file_path):
         """Save to a tck file"""
