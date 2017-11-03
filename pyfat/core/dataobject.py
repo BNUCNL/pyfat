@@ -100,6 +100,10 @@ class Fasciculus(object):
         self._z_gradient = self.get_z_gradient()
         # mean curvature
         self._mean_curvature = self.get_mean_curvature()
+        # mean orientation
+        self._mean_orientation = self.get_mean_orientation()
+        # lr ratio
+        self._ratio = self.get_lr_ratio()
 
         if lengths_min is None:
             self._lengths_min = self.get_lengths_min()
@@ -223,6 +227,20 @@ class Fasciculus(object):
     def get_mean_curvature(self):
         mean_curvature = [dtm.mean_curvature(stream) for stream in self._data]
         return mean_curvature
+
+    def get_mean_orientation(self):
+        mean_orientation = [dtm.mean_orientation(stream) for stream in self._data]
+        return mean_orientation
+
+    def get_lr_ratio(self):
+        r = []
+        for i in range(len(self._data)):
+            rat = len(self._data[i][:, 0][self._data[i][:, 0] <= 0]) / \
+                  len(self._data[i][:, 0][self._data[i][:, 0] >= 0])
+            if rat < 1:
+                rat = 1 / rat
+            r.append(rat)
+        return r
 
     def set_labels(self, labels):
         if len(labels) == len(self._labels):
