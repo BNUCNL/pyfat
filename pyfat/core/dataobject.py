@@ -1,11 +1,14 @@
 # !/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import division
 import numpy as np
 import nibabel.streamlines.tractogram as nibtcg
+import nibabel.streamlines.array_sequence as nibas
 from dipy.tracking.utils import length
 import nibabel.streamlines.tck as nibtck
 import dipy.tracking.metrics as dtm
+
 
 class Fasciculus(object):
     """Base attributes of the fasciculus"""
@@ -49,7 +52,7 @@ class Fasciculus(object):
         Fasciculus
 
         """
-        if isinstance(source, nibtck.ArraySequence):
+        if isinstance(source, nibas.ArraySequence):
             self._data = source
             if not isinstance(header, dict):
                 raise ValueError("Parameter header must be specified!")
@@ -94,14 +97,6 @@ class Fasciculus(object):
         self._labels = len(self._data)*[None]
         # dict(self._label, self._data)
         self._labels_data = zip(self._labels, self._data)
-        # x,y,z gradient
-        self._x_gradient = self.get_x_gradient()
-        self._y_gradient = self.get_y_gradient()
-        self._z_gradient = self.get_z_gradient()
-        # mean curvature
-        self._mean_curvature = self.get_mean_curvature()
-        # mean orientation
-        self._mean_orientation = self.get_mean_orientation()
         # lr ratio
         self._ratio = self.get_lr_ratio()
 
@@ -124,7 +119,7 @@ class Fasciculus(object):
         return self._data
 
     def set_data(self, data):
-        if isinstance(data, nibtck.ArraySequence):
+        if isinstance(data, nibas.ArraySequence):
             self._data = data
         else:
             raise ValueError("Data must be an object nibtck.ArraySequence.")
@@ -254,6 +249,23 @@ class Fasciculus(object):
             self._labels_data = zip(self._labels, self._data)
         else:
             raise ValueError("Data dimension does not match.")
+
+    def xmin_nodes(self):
+        """Extract xmin nodes"""
+        xmin_nodes = nibas.ArraySequence()
+        for i in range(len(self._data)):
+            l = self._data[i][:, 0]
+            l_ahead = list(l[:])
+            a = l_ahead.pop(0)
+            l_ahead.append(a)
+            x_stemp = np.array([l, l_ahead])
+            x_stemp_index = x_stemp.prod(axis=0)
+            index0 = np.argwhere(x_stemp_index <= 0)
+            index_term = np.argmin((abs(self._data[i][index0[0][0]][0]),
+                                    abs(self._data[i][index0[0][0] + 1][0])))
+            index = index0[0][0] + index_term
+            xmin_nodes.append(self._data[i][index])
+        return xmin_nodes
 
     def save2tck(self, file_path):
         """Save to a tck file"""
