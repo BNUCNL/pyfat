@@ -318,7 +318,7 @@ class FibSelection(object):
         # return [oc ac other cc] or [oc ac cc]
         return node_total, fib_total
 
-    def labels2fasc(self, label):
+    def labels2fasc(self, label_in):
         """Extract fasc according to labels"""
         fasciculus_data = self._fasciculus.get_data()
         labels = self._fasciculus.get_labes()
@@ -327,5 +327,5 @@ class FibSelection(object):
             index_i = np.argwhere(labels == label)
             fib_clusters.append(fasciculus_data[index_i])
         # labels_data = zip(set(labels), fib_clusters)
-        label_data = fib_clusters[label]
+        label_data = fib_clusters[label_in]
         return label_data
