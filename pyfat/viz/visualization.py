@@ -13,7 +13,7 @@ def show(lengths, x=180, y=10000,
     plt.figure('Fiber statistics')
     plt.subplot(111)
     plt.title(title)
-    plt.hist(lengths, color='burlywood')
+    plt.hist(lengths, bins=100, color='burlywood')
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.text(x, y, 'fiber_count=%d' % len(lengths), fontsize=10)
