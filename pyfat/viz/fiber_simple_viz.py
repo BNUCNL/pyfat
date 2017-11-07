@@ -3,7 +3,6 @@
 
 from __future__ import division
 import numpy as np
-import nibabel as nib
 from dipy.viz import actor, window, widget
 
 

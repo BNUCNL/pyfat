@@ -3,42 +3,52 @@
 
 from __future__ import division
 import numpy as np
-import nibabel.streamlines.tck as nibtck
 import nibabel.streamlines.array_sequence as nibas
 
-
-def extract_endpoint_dissimilar(imgtck):
-    """
-    extract endpoint dissimilar fiber
-    :param imgtck:input wholeBrain fiber
-    :return: ArraySequence: extract endpoint dissimilar fiber
-    """
-    L_temp = nibas.ArraySequence()
-
-    if isinstance(imgtck, nibtck.TckFile):
-        for i in range(len(imgtck.streamlines)):
-            if imgtck.streamlines[i][0][0] * imgtck.streamlines[i][-1][0] < 0:
-                L_temp.append(imgtck.streamlines[i])
-
-    if isinstance(imgtck, nibas.ArraySequence):
-        for i in range(len(imgtck)):
-            if imgtck[i][0][0] * imgtck[i][-1][0] < 0:
-                L_temp.append(imgtck[i])
-    return L_temp
+from pyfat.core.dataobject import Fasciculus
 
 
-def extract_multi_node(imgtck):
-    """
-    extract multi-nodes fiber
-    :param imgtck: wholeBrain fiber
-    :return: only node fiber and multi-nodes fiber
-    """
-    L_temp_noly_node = nibas.ArraySequence()
-    L_temp_multi_node = nibas.ArraySequence()
+class FibSelection(object):
+    """Based on the fasciculus choose fiber"""
+    def __init__(self, fasciculus):
+        """
+        Based on the fasciculus choose fiber
 
-    if isinstance(imgtck, nibtck.TckFile):
-        for i in range(len(imgtck.streamlines)):
-            l = imgtck.streamlines[i][:, 0]
+        Parameters
+        ----------
+        fasciculus : an object of class Fasciculus
+            An object of class Fasciculus
+
+        Return
+        ------
+        FibSelection
+
+        """
+        if isinstance(fasciculus, Fasciculus):
+            self._fasciculus = fasciculus
+        else:
+            raise ValueError("The fasciculus must be an object of class Fasciculus.")
+
+    def endpoint_dissimilarity(self):
+        """Extract endpoint dissimilar fiber"""
+        fasciculus_data = self._fasciculus.get_data()
+        index = len(fasciculus_data) * [False]
+        for i in range(len(fasciculus_data)):
+            if fasciculus_data[i][0][0] * fasciculus_data[i][-1][0] < 0:
+                index[i] = True
+        fasciculus_data = fasciculus_data[index]
+
+        return fasciculus_data
+
+    def single_point_mid_sag(self):
+        """
+        A single time through the sagittal plane in the middle.
+        The function is implemented after function endpoint_dissimilarity
+        """
+        fasciculus_data = self._fasciculus.get_data()
+        index = len(fasciculus_data) * [False]
+        for i in range(len(fasciculus_data)):
+            l = fasciculus_data[i][:, 0]
             l_ahead = list(l[:])
             a = l_ahead.pop(0)
             l_ahead.append(a)
@@ -46,221 +56,276 @@ def extract_multi_node(imgtck):
             x_stemp_index = x_stemp.prod(axis=0)
             if len(np.argwhere(x_stemp_index < 0)) == 2 \
                     or len(np.argwhere(x_stemp_index == 0)) == 2:
-                L_temp_noly_node.append(imgtck.streamlines[i])
-            else:
-                L_temp_multi_node.append(imgtck.streamlines[i])
+                index[i] = True
+        fasciculus_data = fasciculus_data[index]
 
-            # count = 0
-            # for j in range(len(imgtck.streamlines[i]) - 1):
-            #     if imgtck.streamlines[i][j][0] * imgtck.streamlines[i][j + 1][0] < 0:
-            #         count += 1
-            #     elif imgtck.streamlines[i][j][0] == 0:
-            #         count += 1
-            # if count == 1:
-            #     L_temp_noly_node.append(imgtck.streamlines[i])
-            # else:
-            #     L_temp_multi_node.append(imgtck.streamlines[i])
+        return fasciculus_data
 
-    if isinstance(imgtck, nibas.ArraySequence):
-        for i in range(len(imgtck)):
-            l = imgtck[i][:, 0]
-            l_ahead = list(l[:])
-            a = l_ahead.pop(0)
-            l_ahead.append(a)
-            x_stemp = np.array([l, l_ahead])
-            x_stemp_index = x_stemp.prod(axis=0)
-            if len(np.argwhere(x_stemp_index < 0)) == 2 \
-                    or len(np.argwhere(x_stemp_index == 0)) == 2:
-                L_temp_noly_node.append(imgtck[i])
-            else:
-                L_temp_multi_node.append(imgtck[i])
-
-            # count = 0
-            # for j in range(len(imgtck[i]) - 1):
-            #     if imgtck[i][j][0] * imgtck[i][j + 1][0] < 0:
-            #         count += 1
-            #     elif imgtck[i][j][0] == 0:
-            #         count += 1
-            # if count == 1:
-            #     L_temp_noly_node.append(imgtck[i])
-            # else:
-            #     L_temp_multi_node.append(imgtck[i])
-
-    return L_temp_noly_node, L_temp_multi_node
-
-
-def extract_lr_step(imgtck, n=20):
-    """
-    extract lr n steps fiber
-    :param imgtck:input wholeBrain fiber
-    :param n:number of steps
-    :return: ArraySequence: extract lr n steps fiber
-    """
-    L_temp_need = nibas.ArraySequence()
-    L_temp_n = nibas.ArraySequence()
-
-    if isinstance(imgtck, nibtck.TckFile):
-        for i in range(len(imgtck.streamlines)):
-            l = imgtck.streamlines[i][:, 0]
+    def lr_step(self, n=20):
+        """
+        Extract lr n steps fiber
+        The function is implemented after function single_point_mid_sag
+        """
+        fasciculus_data = self._fasciculus.get_data()
+        index = len(fasciculus_data) * [False]
+        for i in range(len(fasciculus_data)):
+            l = fasciculus_data[i][:, 0]
             l_ahead = list(l[:])
             a = l_ahead.pop(0)
             l_ahead.append(a)
             x_stemp = np.array([l, l_ahead])
             x_stemp_index = x_stemp.prod(axis=0)
             index0 = np.argwhere(x_stemp_index <= 0)
-            index_term = np.argmin((abs(imgtck.streamlines[i][index0[0][0]][0]),
-                                    abs(imgtck.streamlines[i][index0[0][0] + 1][0])))
-            index = index0[0][0] + index_term
-            if index - n in range(len(l)) \
-                    and index + n in range(len(l)):
-                L_temp_need.append(imgtck.streamlines[i])
-            else:
-                L_temp_n.append(imgtck.streamlines[i])
+            index_term = np.argmin((abs(fasciculus_data[i][index0[0][0]][0]),
+                                    abs(fasciculus_data[i][index0[0][0] + 1][0])))
+            index_t = index0[0][0] + index_term
+            if index_t - n in range(len(l)) \
+                    and index_t + n in range(len(l)):
+                index[i] = True
+        fasciculus_data = fasciculus_data[index]
 
-            # # index = np.argmin(abs(imgtck.streamlines[i][:, 0]))
-            # for j in range(len(imgtck.streamlines[i]) - 1):
-            #     if imgtck.streamlines[i][j][0] * imgtck.streamlines[i][j+1][0] <= 0:
-            #         if (j - n) in range(len(imgtck.streamlines[i])) \
-            #                 and (j + n) in range(len(imgtck.streamlines[i])):
-            #             L_temp_need.append(imgtck.streamlines[i])
-            #         else:
-            #             L_temp_n.append(imgtck.streamlines[i])
+        return fasciculus_data
 
-    if isinstance(imgtck, nibas.ArraySequence):
-        for i in range(len(imgtck)):
-            l = imgtck[i][:, 0]
-            l_ahead = list(l[:])
-            a = l_ahead.pop(0)
-            l_ahead.append(a)
-            x_stemp = np.array([l, l_ahead])
-            x_stemp_index = x_stemp.prod(axis=0)
-            index0 = np.argwhere(x_stemp_index <= 0)
-            index_term = np.argmin((abs(imgtck[i][index0[0][0]][0]),
-                                    abs(imgtck[i][index0[0][0] + 1][0])))
-            index = index0[0][0] + index_term
-            if index - n in range(len(l)) \
-                    and index + n in range(len(l)):
-                L_temp_need.append(imgtck[i])
-            else:
-                L_temp_n.append(imgtck[i])
-
-            # index = np.argmin(abs(imgtck[i][:, 0]))
-            # if (index - n) in range(len(imgtck[i])) \
-            #         and (index + n) in range(len(imgtck[i])):
-            #     L_temp_need.append(imgtck[i])
-            # else:
-            #     L_temp_n.append(imgtck[i])
-
-    return L_temp_need, L_temp_n
-
-def extract_lr_rat(imgtck, ratio=2.0):
-    """
-    extract lr ratio fiber
-    :param imgtck:input wholeBrain fiber
-    :return: ArraySequence: extract fiber:the percentage of left and right hemispheres fiber points in [0.4, 2.5]
-    """
-    L_temp_need = nibas.ArraySequence()
-    L_temp_n = nibas.ArraySequence()
-
-    if isinstance(imgtck, nibtck.TckFile):
-        for i in range(len(imgtck.streamlines)):
-            rat = len(imgtck.streamlines[i][:, 0][imgtck.streamlines[i][:, 0] <= 0]) / \
-                  len(imgtck.streamlines[i][:, 0][imgtck.streamlines[i][:, 0] >= 0])
+    def lr_rat(self, ratio=1.5):
+        """
+        Extract lr ratio fiber
+        The function is implemented after function single_point_mid_sag
+        """
+        fasciculus_data = self._fasciculus.get_data()
+        index = len(fasciculus_data) * [False]
+        for i in range(len(fasciculus_data)):
+            rat = len(fasciculus_data[i][:, 0][fasciculus_data[i][:, 0] <= 0]) / \
+                  len(fasciculus_data[i][:, 0][fasciculus_data[i][:, 0] >= 0])
             if rat < 1:
                 rat = 1 / rat
             if rat < ratio:
-                L_temp_need.append(imgtck.streamlines[i])
-            else:
-                L_temp_n.append(imgtck.streamlines[i])
+                index[i] = True
+        fasciculus_data = fasciculus_data[index]
 
-    if isinstance(imgtck, nibas.ArraySequence):
-        for i in range(len(imgtck)):
-            rat = len(imgtck[i][:, 0][imgtck[i][:, 0] <= 0]) / \
-                  len(imgtck[i][:, 0][imgtck[i][:, 0] >= 0])
-            if rat < 1:
-                rat = 1 / rat
-            if rat < ratio:
-                L_temp_need.append(imgtck[i])
-            else:
-                L_temp_n.append(imgtck[i])
+        return fasciculus_data
 
-    return L_temp_need, L_temp_n
-
-def extract_xyz_gradient(imgtck, n=None):
-    """
-    extract fiber
-    :param imgtck:input wholeBrain fiber
-    :param n:lr numbers
-    :return: ALS: extract AP LR SI orientation fiber
-    """
-    AP = nibas.ArraySequence()
-    LR = nibas.ArraySequence()
-    SI = nibas.ArraySequence()
-    ALS = [AP, LR, SI]
-
-    if n is None:
-        if isinstance(imgtck, nibtck.TckFile):
-            for i in range(len(imgtck.streamlines)):
-                grad = np.gradient(imgtck.streamlines[i])
-                x_grad = grad[0][:, 0].sum()
-                y_grad = grad[0][:, 1].sum()
-                z_grad = grad[0][:, 2].sum()
-
-                index = np.array([y_grad, x_grad, z_grad]).argmax()
-                ALS[index].append(imgtck.streamlines[i])
-
-        if isinstance(imgtck, nibas.ArraySequence):
-            for i in range(len(imgtck)):
-                grad = np.gradient(imgtck[i])
-                x_grad = grad[0][:, 0].sum()
-                y_grad = grad[0][:, 1].sum()
-                z_grad = grad[0][:, 2].sum()
-
-                index = np.array([y_grad, x_grad, z_grad]).argmax()
-                ALS[index].append(imgtck[i])
-    else:
-        if isinstance(imgtck, nibtck.TckFile):
-            for i in range(len(imgtck.streamlines)):
-                l = imgtck.streamlines[i][:, 0]
+    def xmax_gradient(self, n=None):
+        """
+        Extract fiber according to x max gradient
+        The function is implemented after function single_point_mid_sag
+        """
+        fasciculus_data = self._fasciculus.get_data()
+        index = len(fasciculus_data) * [False]
+        if n:
+            for i in range(len(fasciculus_data)):
+                l = fasciculus_data[i][:, 0]
                 l_ahead = list(l[:])
                 a = l_ahead.pop(0)
                 l_ahead.append(a)
                 x_stemp = np.array([l, l_ahead])
                 x_stemp_index = x_stemp.prod(axis=0)
                 index0 = np.argwhere(x_stemp_index <= 0)
-                index_term = np.argmin((abs(imgtck.streamlines[i][index0[0][0]][0]),
-                                        abs(imgtck.streamlines[i][index0[0][0] + 1][0])))
-                index = index0[0][0] + index_term
-                if (index - n) in range(len(l)) \
-                        and (index + n) in range(len(l)):
-                    grad = np.gradient(imgtck.streamlines[i][index - n:index + n, :])
+                index_term = np.argmin((abs(fasciculus_data[i][index0[0][0]][0]),
+                                        abs(fasciculus_data[i][index0[0][0] + 1][0])))
+                index_t = index0[0][0] + index_term
+                if (index_t - n) in range(len(l)) \
+                        and (index_t + n) in range(len(l)):
+                    grad = np.gradient(fasciculus_data[i])
                     x_grad = grad[0][:, 0].sum()
                     y_grad = grad[0][:, 1].sum()
                     z_grad = grad[0][:, 2].sum()
 
-                    index = np.array([y_grad, x_grad, z_grad]).argmax()
-                    ALS[index].append(imgtck.streamlines[i])
+                    index_temp = np.array([x_grad, y_grad, z_grad]).argmax()
+                    if index_temp == 0:
+                        index[i] = True
+        else:
+            for i in range(len(fasciculus_data)):
+                grad = np.gradient(fasciculus_data[i])
+                x_grad = grad[0][:, 0].sum()
+                y_grad = grad[0][:, 1].sum()
+                z_grad = grad[0][:, 2].sum()
 
-        if isinstance(imgtck, nibas.ArraySequence):
-            for i in range(len(imgtck)):
-                l = imgtck[i][:, 0]
+                index_temp = np.array([x_grad, y_grad, z_grad]).argmax()
+                if index_temp == 0:
+                    index[i] = True
+        fasciculus_data = fasciculus_data[index]
+
+        return fasciculus_data
+
+    def ymax_gradient(self, n=None):
+        """
+        Extract fiber according to y max gradient
+        The function is implemented after function single_point_mid_sag
+        """
+        fasciculus_data = self._fasciculus.get_data()
+        index = len(fasciculus_data) * [False]
+        if n:
+            for i in range(len(fasciculus_data)):
+                l = fasciculus_data[i][:, 0]
                 l_ahead = list(l[:])
                 a = l_ahead.pop(0)
                 l_ahead.append(a)
                 x_stemp = np.array([l, l_ahead])
                 x_stemp_index = x_stemp.prod(axis=0)
                 index0 = np.argwhere(x_stemp_index <= 0)
-                index_term = np.argmin((abs(imgtck[i][index0[0][0]][0]),
-                                        abs(imgtck.streamlines[i][index0[0][0] + 1][0])))
-                index = index0[0][0] + index_term
-                if (index - n) in range(len(l)) \
-                        and (index + n) in range(len(l)):
-                    grad = np.gradient(imgtck[i])
+                index_term = np.argmin((abs(fasciculus_data[i][index0[0][0]][0]),
+                                        abs(fasciculus_data[i][index0[0][0] + 1][0])))
+                index_t = index0[0][0] + index_term
+                if (index_t - n) in range(len(l)) \
+                        and (index_t + n) in range(len(l)):
+                    grad = np.gradient(fasciculus_data[i])
                     x_grad = grad[0][:, 0].sum()
                     y_grad = grad[0][:, 1].sum()
                     z_grad = grad[0][:, 2].sum()
 
-                    index = np.array([y_grad, x_grad, z_grad]).argmax()
-                    ALS[index].append(imgtck[i])
+                    index_temp = np.array([x_grad, y_grad, z_grad]).argmax()
+                    if index_temp == 1:
+                        index[i] = True
+        else:
+            for i in range(len(fasciculus_data)):
+                grad = np.gradient(fasciculus_data[i])
+                x_grad = grad[0][:, 0].sum()
+                y_grad = grad[0][:, 1].sum()
+                z_grad = grad[0][:, 2].sum()
 
-    return ALS
+                index_temp = np.array([x_grad, y_grad, z_grad]).argmax()
+                if index_temp == 1:
+                    index[i] = True
+        fasciculus_data = fasciculus_data[index]
+
+        return fasciculus_data
+
+    def zmax_gradient(self, n=None):
+        """
+        Extract fiber according to z max gradient
+        The function is implemented after function single_point_mid_sag
+        """
+        fasciculus_data = self._fasciculus.get_data()
+        index = len(fasciculus_data) * [False]
+        if n:
+            for i in range(len(fasciculus_data)):
+                l = fasciculus_data[i][:, 0]
+                l_ahead = list(l[:])
+                a = l_ahead.pop(0)
+                l_ahead.append(a)
+                x_stemp = np.array([l, l_ahead])
+                x_stemp_index = x_stemp.prod(axis=0)
+                index0 = np.argwhere(x_stemp_index <= 0)
+                index_term = np.argmin((abs(fasciculus_data[i][index0[0][0]][0]),
+                                        abs(fasciculus_data[i][index0[0][0] + 1][0])))
+                index_t = index0[0][0] + index_term
+                if (index_t - n) in range(len(l)) \
+                        and (index_t + n) in range(len(l)):
+                    grad = np.gradient(fasciculus_data[i])
+                    x_grad = grad[0][:, 0].sum()
+                    y_grad = grad[0][:, 1].sum()
+                    z_grad = grad[0][:, 2].sum()
+
+                    index_temp = np.array([x_grad, y_grad, z_grad]).argmax()
+                    if index_temp == 2:
+                        index[i] = True
+        else:
+            for i in range(len(fasciculus_data)):
+                grad = np.gradient(fasciculus_data[i])
+                x_grad = grad[0][:, 0].sum()
+                y_grad = grad[0][:, 1].sum()
+                z_grad = grad[0][:, 2].sum()
+
+                index_temp = np.array([x_grad, y_grad, z_grad]).argmax()
+                if index_temp == 2:
+                    index[i] = True
+        fasciculus_data = fasciculus_data[index]
+
+        return fasciculus_data
+
+    def fib_cc(self):
+        """
+        Extract corpus callosum fiber
+        The function is implemented after function step/lr/gradient
+        """
+        fasciculus_data = self._fasciculus.get_data()
+        labels = self._fasciculus.get_labes()
+        xmin = self._fasciculus.xmin_nodes()
+        node_clusters = []
+        fib_clusters = []
+        for label in set(labels):
+            index_i = np.argwhere(labels == label)
+            node_clusters.append(xmin[index_i])
+            fib_clusters.append(fasciculus_data[index_i])
+
+        index = [n_c[:, 2].max() for n_c in node_clusters]
+        index_need = np.array(index).argmax()
+        cc_nodes = node_clusters[index_need]
+        cc_fibs = fib_clusters[index_need]
+
+        return cc_nodes, cc_fibs
+
+    def fib_ac_oc(self):
+        """
+        Extract anterior commissure and optic chiasma fiber
+        The function is implemented after function step/lr/gradient
+        """
+        fasciculus_data = self._fasciculus.get_data()
+        labels = self._fasciculus.get_labes()
+        xmin = self._fasciculus.xmin_nodes()
+
+        node_clusters = []
+        fib_clusters = []
+        for label in set(labels):
+            index_i = np.argwhere(labels == label)
+            node_clusters.append(xmin[index_i])
+            fib_clusters.append(fasciculus_data[index_i])
+
+        clusters_z_mean = [n_c[:, 2].mean() for n_c in node_clusters]
+        clusters_y_mean = [n_c[:, 1].mean() for n_c in node_clusters]
+        index_z = np.array(clusters_z_mean) < 1.50
+        index_y = np.array(clusters_y_mean) < -10.50
+
+        remain_clusters = []
+        remain_fib_clusters = []
+        for i in range(len(node_clusters)):
+            if not index_z[i] or not index_y[i]:
+                remain_clusters.append(node_clusters[i])
+                remain_fib_clusters.append(fib_clusters[i])
+
+        clusters_z_max = [k[:, 2].max() for k in remain_clusters]
+        node = np.array(zip(range(len(clusters_z_max)), clusters_z_max))
+        node_sort = node[np.lexsort(node.T)]
+
+        node_total = []
+        other_node = []
+        for d in node_sort[2:-1]:
+            for n in remain_clusters[int(d[0])]:
+                other_node.append(list(n))
+
+        node_total.append(remain_clusters[int(node_sort[0][0])])
+        node_total.append(remain_clusters[int(node_sort[1][0])])
+        if len(other_node) == 0:
+            pass
+        else:
+            node_total.append(np.array(other_node))
+        node_total.append(remain_clusters[int(node_sort[-1][0])])
+
+        fib_total = []
+        other = nibas.ArraySequence()
+        for d in node_sort[2:-1]:
+            for f in remain_fib_clusters[int(d[0])]:
+                other.append(f)
+
+        fib_total.append(remain_fib_clusters[int(node_sort[0][0])])
+        fib_total.append(remain_fib_clusters[int(node_sort[1][0])])
+        if len(other) == 0:
+            pass
+        else:
+            fib_total.append(other)
+        fib_total.append(remain_fib_clusters[int(node_sort[-1][0])])
+
+        # return [oc ac other cc] or [oc ac cc]
+        return node_total, fib_total
+
+    def labels2fasc(self, label_in):
+        """Extract fasc according to labels"""
+        fasciculus_data = self._fasciculus.get_data()
+        labels = self._fasciculus.get_labes()
+        fib_clusters = []
+        for label in set(labels):
+            index_i = np.argwhere(labels == label)
+            fib_clusters.append(fasciculus_data[index_i])
+        # labels_data = zip(set(labels), fib_clusters)
+        label_data = fib_clusters[label_in]
+        return label_data

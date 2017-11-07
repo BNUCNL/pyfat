@@ -7,6 +7,19 @@ import matplotlib.pyplot as plt
 from nibabel.affines import apply_affine
 
 
+def show(lengths, x=180, y=10000,
+         title='Length histogram', xlabel='Length', ylabel='Count'):
+    """Display length or lr ratio"""
+    plt.figure('Fiber statistics')
+    plt.subplot(111)
+    plt.title(title)
+    plt.hist(lengths, bins=100, color='burlywood')
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.text(x, y, 'fiber_count=%d' % len(lengths), fontsize=10)
+
+    plt.show()
+
 def show_2d_node(img, Ls_temp):
     fig, ax = plt.subplots()
     slice = img.get_data()[img.shape[0]/2, :, :]
