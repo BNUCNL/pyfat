@@ -267,6 +267,19 @@ class Fasciculus(object):
             xmin_nodes.append(self._data[i][index])
         return xmin_nodes
 
+    def sort_streamlines(self, data=None):
+        if data is not None:
+            fasciculus_data = data
+        else:
+            fasciculus_data = self._data
+        fasciculus_data_sort = nibas.ArraySequence()
+        for i in range(len(fasciculus_data)):
+            if fasciculus_data[i][0][0] < 0:
+                fasciculus_data_sort.append(fasciculus_data[i])
+            else:
+                fasciculus_data_sort.append(fasciculus_data[i][::-1])
+        return fasciculus_data_sort
+
     def save2tck(self, file_path):
         """Save to a tck file"""
         tractogram = nibtcg.Tractogram(streamlines=self._data, data_per_streamline=self._data_per_streamline,
