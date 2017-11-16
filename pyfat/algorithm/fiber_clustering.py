@@ -115,8 +115,11 @@ class FibClustering(object):
         data_clusters = []
         for key in clusters.keys():
             data_clusters.append(streamlines[clusters[key]['indices']])
+        centroids = bundles.centroids
+        clusters_y_mean = [clu[:, 1].mean() for clu in centroids]
+        sort_index = np.argsort(clusters_y_mean)
 
-        return data_clusters
+        return sort_index, data_clusters
 
     def bundle_centroids(self, streamlines, cluster_thre=10, dist_thre=10.0, pts=12):
         """QuickBundles-based segmentation"""
