@@ -230,9 +230,13 @@ class Fasciculus(object):
     def get_lr_ratio(self):
         r = []
         for i in range(len(self._data)):
-            rat = len(self._data[i][:, 0][self._data[i][:, 0] <= 0]) / \
-                  len(self._data[i][:, 0][self._data[i][:, 0] >= 0])
-            if rat < 1:
+            if len(self._data[i][:, 0][self._data[i][:, 0] <= 0]) == 0 or \
+                            len(self._data[i][:, 0][self._data[i][:, 0] >= 0]) == 0:
+                rat = 0
+            else:
+                rat = len(self._data[i][:, 0][self._data[i][:, 0] <= 0]) / \
+                      len(self._data[i][:, 0][self._data[i][:, 0] >= 0])
+            if 0 < rat < 1:
                 rat = 1 / rat
             r.append(rat)
         return r
