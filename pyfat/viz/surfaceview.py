@@ -70,12 +70,15 @@ def surface_streamlines_map(subjects_dir, subject_id, hemi, surf, alpha, coords)
     if hemi == 'both':
         hemi_both = ['lh', 'rh']
         for hemi_index in range(len(['lh', 'rh'])):
-            brain.add_overlay(coords[hemi_index], min=1, max=coords[hemi_index].max(), sign='pos', hemi=hemi_both[hemi_index])
+            brain.add_overlay(coords[hemi_index], min=coords[hemi_index][coords[hemi_index] > 0].min(),
+                              max=coords[hemi_index].max(), sign='pos', hemi=hemi_both[hemi_index])
 
     elif hemi == 'lh':
-        brain.add_overlay(coords[0], min=1, max=coords[0].max(), sign='pos', hemi='lh', name='lh')
+        brain.add_overlay(coords[0], min=coords[0][coords[0] > 0].min(),
+                          max=coords[0].max(), sign='pos', hemi='lh', name='lh')
 
     else:
-        brain.add_overlay(coords[1], min=1, max=coords[1].max(), sign='pos', hemi='rh', name='rh')
+        brain.add_overlay(coords[1], min=coords[1][coords[1] > 0].min,
+                          max=coords[1].max(), sign='pos', hemi='rh', name='rh')
 
     mlab.show()

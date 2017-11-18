@@ -14,6 +14,7 @@ import numpy as np
 from scipy.spatial.distance import cdist
 import dipy.tracking.utils as ditu
 import nibabel.streamlines.array_sequence as nibas
+from dipy.segment.quickbundles import QuickBundles
 
 
 # fiber density of volume
@@ -41,6 +42,16 @@ def fib_density_map(volume, fiber, output_path):
 
     dm_img = nib.Nifti1Image(image_volume.astype("int16"), affine)
     dm_img.to_filename(output_path)
+
+
+def _sort_streamlines(fasciculus_data):
+    fasciculus_data_sort = nibas.ArraySequence()
+    for i in range(len(fasciculus_data)):
+        if fasciculus_data[i][0][0] < 0:
+            fasciculus_data_sort.append(fasciculus_data[i])
+        else:
+            fasciculus_data_sort.append(fasciculus_data[i][::-1])
+    return fasciculus_data_sort
 
 
 def terminus2surface_nearest_pts(streamlines, geo_path):
@@ -86,43 +97,44 @@ def terminus2surface_map(streamlines, geo_path):
     return vert_lh_value, vert_rh_value
 
 
-def _sort_streamlines(fasciculus_data):
-    fasciculus_data_sort = nibas.ArraySequence()
-    for i in range(len(fasciculus_data)):
-        if fasciculus_data[i][0][0] < 0:
-            fasciculus_data_sort.append(fasciculus_data[i])
-        else:
-            fasciculus_data_sort.append(fasciculus_data[i][::-1])
-    return fasciculus_data_sort
+def terminus2surface_density_map(streamlines, geo_path):
+    """
+    Points mapping to surface
+    streamlines > 1000
+    """
+    streamlines = _sort_streamlines(streamlines)
+    bundles = QuickBundles(streamlines, 10, 12)
+    # bundles.remove_small_clusters(10)
+    clusters = bundles.clusters()
+    data_clusters = []
+    for key in clusters.keys():
+        data_clusters.append(streamlines[clusters[key]['indices']])
 
-
-def clusters_terminus2surface_map(cluters, geo_path):
-    """Clusters mapping to surface"""
-    data0 = _sort_streamlines(cluters[0])
+    data0 = data_clusters[0]
     stream_terminus_lh0 = np.array([s[0] for s in data0])
     stream_terminus_rh0 = np.array([s[-1] for s in data0])
 
     coords_lh, faces_lh = nib.freesurfer.read_geometry(geo_path[0])
     dist_lh0 = cdist(coords_lh, stream_terminus_lh0)
-    vert_lh_label = np.array([float(np.array(dist_lh0[m] < 5).sum(axis=0)) for m in range(len(dist_lh0[:]))])
-    vert_lh_label[vert_lh_label > 0] = 1
+    vert_lh_value = np.array([float(np.array(dist_lh0[m] < 5).sum(axis=0)) for m in range(len(dist_lh0[:]))])
 
     coords_rh, faces_rh = nib.freesurfer.read_geometry(geo_path[1])
     dist_rh0 = cdist(coords_rh, stream_terminus_rh0)
-    vert_rh_label = np.array([float(np.array(dist_rh0[n] < 5).sum(axis=0)) for n in range(len(dist_rh0[:]))])
-    vert_rh_label[vert_rh_label > 0] = 1
+    vert_rh_value = np.array([float(np.array(dist_rh0[n] < 5).sum(axis=0)) for n in range(len(dist_rh0[:]))])
 
-    for i in range(len(cluters)):
-        data = _sort_streamlines(cluters[i])
+    for i in range(len(data_clusters)):
+        data = data_clusters[i]
         stream_terminus_lh = np.array([s[0] for s in data])
         stream_terminus_rh = np.array([s[-1] for s in data])
 
         dist_lh = cdist(coords_lh, stream_terminus_lh)
-        vert_lh_value = np.array([np.array(dist_lh[j] < 5).sum(axis=0) for j in range(len(dist_lh[:]))])
-        vert_lh_label[vert_lh_value > vert_lh_label] = i + 1
+        vert_lh_value_i = np.array([np.array(dist_lh[j] < 5).sum(axis=0) for j in range(len(dist_lh[:]))])
 
         dist_rh = cdist(coords_rh, stream_terminus_rh)
-        vert_rh_value = np.array([np.array(dist_rh[k] < 5).sum(axis=0) for k in range(len(dist_rh[:]))])
-        vert_rh_label[vert_rh_value > vert_rh_label] = i + 1
+        vert_rh_value_i = np.array([np.array(dist_rh[k] < 5).sum(axis=0) for k in range(len(dist_rh[:]))])
 
-    return vert_lh_label, vert_rh_label
+        if i != 0:
+            vert_lh_value += vert_lh_value_i
+            vert_rh_value += vert_rh_value_i
+
+    return vert_lh_value, vert_rh_value
