@@ -102,5 +102,45 @@ def clusters_terminus2surface_pm(cluters, geo_path):
 
 
 def clusters_terminus2surface_mpm(cluters, geo_path):
-    """Maximum probabilistic map"""
-    pass
+    """
+    Clusters mapping to surface
+    Maximum probabilistic map
+    """
+    data0 = _sort_streamlines(cluters[0])
+    stream_terminus_lh0 = np.array([s[0] for s in data0])
+    stream_terminus_rh0 = np.array([s[-1] for s in data0])
+
+    coords_lh, faces_lh = nib.freesurfer.read_geometry(geo_path[0])
+    dist_lh0 = cdist(coords_lh, stream_terminus_lh0)
+    vert_lh_label = np.array([float(np.array(dist_lh0[m] < 5).sum(axis=0)) for m in range(len(dist_lh0[:]))])
+    vert_lh_label[vert_lh_label > 0] = 1
+    vert_lh_label_array = np.array([float(np.array(dist_lh0[m] < 5).sum(axis=0)) for m in range(len(dist_lh0[:]))])
+    vert_lh_label_array.shape = (1, vert_lh_label_array.shape[0])
+
+    coords_rh, faces_rh = nib.freesurfer.read_geometry(geo_path[1])
+    dist_rh0 = cdist(coords_rh, stream_terminus_rh0)
+    vert_rh_label = np.array([float(np.array(dist_rh0[n] < 5).sum(axis=0)) for n in range(len(dist_rh0[:]))])
+    vert_rh_label[vert_rh_label > 0] = 1
+    vert_rh_label_array = np.array([float(np.array(dist_rh0[n] < 5).sum(axis=0)) for n in range(len(dist_rh0[:]))])
+    vert_rh_label_array.shape = (1, vert_rh_label_array.shape[0])
+
+    for i in range(len(cluters)):
+        data = _sort_streamlines(cluters[i])
+        stream_terminus_lh = np.array([s[0] for s in data])
+        stream_terminus_rh = np.array([s[-1] for s in data])
+
+        dist_lh = cdist(coords_lh, stream_terminus_lh)
+        vert_lh_value = np.array([np.array(dist_lh[j] < 5).sum(axis=0) for j in range(len(dist_lh[:]))])
+        vert_lh_label_max = np.array([vert_lh_label_array[:, com_index].max()
+                                      for com_index in range(vert_lh_label_array.shape[1])])
+        vert_lh_label[vert_lh_value > vert_lh_label_max] = i + 1
+        vert_lh_label_array = np.vstack((vert_lh_label_array, vert_lh_value))
+
+        dist_rh = cdist(coords_rh, stream_terminus_rh)
+        vert_rh_value = np.array([np.array(dist_rh[k] < 5).sum(axis=0) for k in range(len(dist_rh[:]))])
+        vert_rh_label_max = np.array([vert_rh_label_array[:, com_id].max()
+                                      for com_id in range(vert_rh_label_array.shape[1])])
+        vert_rh_label[vert_rh_value > vert_rh_label_max] = i + 1
+        vert_rh_label_array = np.vstack((vert_rh_label_array, vert_rh_value))
+
+    return vert_lh_label, vert_rh_label
