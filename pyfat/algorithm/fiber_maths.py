@@ -4,6 +4,8 @@
 # vi: set ft=python sts=4 ts=4 sw=4 et:l
 
 from __future__ import division
+import os
+from nibabel.spatialimages import ImageFileError
 import nibabel as nib
 import numpy as np
 from scipy.spatial.distance import cdist
@@ -67,12 +69,26 @@ def clusters_terminus2surface_pm(cluters, geo_path):
     stream_terminus_lh0 = np.array([s[0] for s in data0])
     stream_terminus_rh0 = np.array([s[-1] for s in data0])
 
-    coords_lh, faces_lh = nib.freesurfer.read_geometry(geo_path[0])
+    suffix = os.path.split(geo_path[0])[1].split('.')[-1]
+    if suffix in ('white', 'inflated', 'pial'):
+        coords_lh, faces_lh = nib.freesurfer.read_geometry(geo_path[0])
+    elif suffix == 'gii':
+        gii_data = nib.load(geo_path[0]).darrays
+        coords_lh, faces_lh = gii_data[0].data, gii_data[1].data
+    else:
+        raise ImageFileError('This file format-{} is not supported at present.'.format(suffix))
     dist_lh0 = cdist(coords_lh, stream_terminus_lh0)
     vert_lh_label = np.array([float(np.array(dist_lh0[m] < 5).sum(axis=0)) for m in range(len(dist_lh0[:]))])
     vert_lh_label[vert_lh_label > 0] = 1
 
-    coords_rh, faces_rh = nib.freesurfer.read_geometry(geo_path[1])
+    suffix = os.path.split(geo_path[1])[1].split('.')[-1]
+    if suffix in ('white', 'inflated', 'pial'):
+        coords_rh, faces_rh = nib.freesurfer.read_geometry(geo_path[1])
+    elif suffix == 'gii':
+        gii_data = nib.load(geo_path[1]).darrays
+        coords_rh, faces_rh = gii_data[0].data, gii_data[1].data
+    else:
+        raise ImageFileError('This file format-{} is not supported at present.'.format(suffix))
     dist_rh0 = cdist(coords_rh, stream_terminus_rh0)
     vert_rh_label = np.array([float(np.array(dist_rh0[n] < 5).sum(axis=0)) for n in range(len(dist_rh0[:]))])
     vert_rh_label[vert_rh_label > 0] = 1
@@ -110,14 +126,28 @@ def clusters_terminus2surface_mpm(cluters, geo_path):
     stream_terminus_lh0 = np.array([s[0] for s in data0])
     stream_terminus_rh0 = np.array([s[-1] for s in data0])
 
-    coords_lh, faces_lh = nib.freesurfer.read_geometry(geo_path[0])
+    suffix = os.path.split(geo_path[0])[1].split('.')[-1]
+    if suffix in ('white', 'inflated', 'pial'):
+        coords_lh, faces_lh = nib.freesurfer.read_geometry(geo_path[0])
+    elif suffix == 'gii':
+        gii_data = nib.load(geo_path[0]).darrays
+        coords_lh, faces_lh = gii_data[0].data, gii_data[1].data
+    else:
+        raise ImageFileError('This file format-{} is not supported at present.'.format(suffix))
     dist_lh0 = cdist(coords_lh, stream_terminus_lh0)
     vert_lh_label = np.array([float(np.array(dist_lh0[m] < 5).sum(axis=0)) for m in range(len(dist_lh0[:]))])
     vert_lh_label[vert_lh_label > 0] = 1
     vert_lh_label_array = np.array([float(np.array(dist_lh0[m] < 5).sum(axis=0)) for m in range(len(dist_lh0[:]))])
     vert_lh_label_array.shape = (1, vert_lh_label_array.shape[0])
 
-    coords_rh, faces_rh = nib.freesurfer.read_geometry(geo_path[1])
+    suffix = os.path.split(geo_path[1])[1].split('.')[-1]
+    if suffix in ('white', 'inflated', 'pial'):
+        coords_rh, faces_rh = nib.freesurfer.read_geometry(geo_path[1])
+    elif suffix == 'gii':
+        gii_data = nib.load(geo_path[1]).darrays
+        coords_rh, faces_rh = gii_data[0].data, gii_data[1].data
+    else:
+        raise ImageFileError('This file format-{} is not supported at present.'.format(suffix))
     dist_rh0 = cdist(coords_rh, stream_terminus_rh0)
     vert_rh_label = np.array([float(np.array(dist_rh0[n] < 5).sum(axis=0)) for n in range(len(dist_rh0[:]))])
     vert_rh_label[vert_rh_label > 0] = 1
