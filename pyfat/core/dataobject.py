@@ -2,7 +2,11 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import division
+import os
 import numpy as np
+import nibabel as nib
+from nibabel.spatialimages import ImageFileError
+
 import nibabel.streamlines.tractogram as nibtcg
 import nibabel.streamlines.array_sequence as nibas
 from dipy.tracking.utils import length
@@ -290,3 +294,119 @@ class Fasciculus(object):
                                        data_per_point=self._data_per_point, affine_to_rasmm=self._affine_to_rasmm)
         datdat = nibtck.TckFile(tractogram=tractogram, header=self._header)
         datdat.save(file_path)
+
+
+class VolumeImage(object):
+    """Base dataset for Volume."""
+    pass
+
+
+class SurfaceGeometry(object):
+    """Base dataset for surface.
+        Attributes
+        ----------
+        geo_path: string
+            Absolute path of surf file
+        x: 1d array
+            x coordinates of vertices
+        y: 1d array
+            y coordinates of vertices
+        z: 1d array
+            z coordinates of vertices
+        coords: 2d array of shape [n_vertices, 3]
+            The vertices coordinates
+        faces: 2d array
+            The faces ie. the triangles
+        """
+
+    def __init__(self, geo_path):
+        """
+        Surface Geometry
+
+        Parameters
+        ----------
+        geo_path: absolute surf file path
+        offset: float | None
+            If 0.0, the surface will be offset such that medial wall
+            is aligned with the origin. If None, no offset will be
+            applied. If != 0.0, an additional offset will be used.
+        """
+        if not os.path.exists(geo_path):
+            print 'surf file does not exist!'
+            return None
+        self.geo_path = geo_path
+        self.surf_dir, name = os.path.split(geo_path)
+        name_split = name.split('.')
+        self.suffix = name_split[-1]
+        if self.suffix in ('pial', 'inflated', 'white'):
+            # FreeSurfer style geometry filename
+            self.hemi_rl = name_split[0]
+        elif self.suffix == 'gii':
+            # CIFTI style geometry filename
+            if name_split[1] == 'L':
+                self.hemi_rl = 'lh'
+            elif name_split[1] == 'R':
+                self.hemi_rl = 'rh'
+            else:
+                self.hemi_rl = None
+        else:
+            raise ImageFileError('This file format-{} is not supported at present.'.format(self.suffix))
+
+        # load geometry
+        self.load()
+
+    def load(self):
+        """Load surface geometry."""
+        if self.suffix in ('pial', 'inflated', 'white'):
+            self.coords, self.faces = nib.freesurfer.read_geometry(self.geo_path)
+        elif self.suffix == 'gii':
+            gii_data = nib.load(self.geo_path).darrays
+            self.coords, self.faces = gii_data[0].data, gii_data[1].data
+        else:
+            raise ImageFileError('This file format-{} is not supported at present.'.format(self.suffix))
+
+    def get_bin_curv(self):
+        """
+        load and get binarized curvature (gyrus' curvature<0, sulcus's curvature>0)
+        :return:
+            binarized curvature
+        """
+        curv_name = '{}.curv'.format(self.hemi_rl)
+        curv_path = os.path.join(self.surf_dir, curv_name)
+        if not os.path.exists(curv_path):
+            return None
+        bin_curv = nib.freesurfer.read_morph_data(curv_path) <= 0
+        bin_curv = bin_curv.astype(np.int)
+
+        return bin_curv
+
+    def save(self, fpath):
+        """Save geometry information."""
+        nib.freesurfer.write_geometry(fpath, self.coords, self.faces)
+
+    def get_vertices_num(self):
+        """Get vertices number of the surface."""
+        return self.coords.shape[0]
+
+    def get_coords(self):
+        return self.coords
+
+    def get_faces(self):
+        return self.faces
+
+    @property
+    def x(self):
+        return self.coords[:, 0]
+
+    @property
+    def y(self):
+        return self.coords[:, 1]
+
+    @property
+    def z(self):
+        return self.coords[:, 2]
+
+    def apply_xfm(self, mtx):
+        """Apply an affine transformation matrix to the x, y, z vectors."""
+        self.coords = np.dot(np.c_[self.coords, np.ones(len(self.coords))],
+                             mtx.T)[:, 3]
