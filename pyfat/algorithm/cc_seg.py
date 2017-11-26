@@ -51,11 +51,15 @@ def cc_seg_same_regions(vol_path, lr_region_path_suffix):
     img = nib.load(vol_path)
     counts = np.zeros(img.shape)
     roi_name_list = os.listdir(lr_region_path_suffix)
-    for path_i in range(len(roi_name_list)):
-        roi_fib_path = os.path.join(lr_region_path_suffix, roi_name_list[path_i])
-        fibs_points = apply_affine(npl.inv(img.affine), Fasciculus(roi_fib_path).xmin_nodes())
-        for n in fibs_points:
-            counts[int(n[0]), int(n[1]), int(n[2])] += 1
-    counts[counts != 2] = 0
+    roi_fib_path = os.path.join(lr_region_path_suffix, roi_name_list[0])
+    fibs_points = apply_affine(npl.inv(img.affine), Fasciculus(roi_fib_path).xmin_nodes())
+    for n in fibs_points:
+        counts[int(n[0]), int(n[1]), int(n[2])] += 1
+
+    roi_fib_path = os.path.join(lr_region_path_suffix, roi_name_list[1])
+    fibs_points = apply_affine(npl.inv(img.affine), Fasciculus(roi_fib_path).xmin_nodes())
+    for m in fibs_points:
+        if counts[int(m[0]), int(m[1]), int(m[2])] != 0:
+            counts[int(m[0]), int(m[1]), int(m[2])] += 1
 
     return counts
