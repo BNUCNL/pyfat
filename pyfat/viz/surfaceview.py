@@ -78,7 +78,39 @@ def surface_streamlines_map(subjects_dir, subject_id, hemi, surf, alpha, coords)
                           max=coords[0].max(), sign='pos', hemi='lh', name='lh')
 
     else:
-        brain.add_overlay(coords[1], min=coords[1][coords[1] > 0].min,
+        brain.add_overlay(coords[1], min=coords[1][coords[1] > 0].min(),
+                          max=coords[1].max(), sign='pos', hemi='rh', name='rh')
+
+    mlab.show()
+
+
+def surface_roi_contour(subjects_dir, subject_id, hemi, surf, alpha, coords, region):
+    """
+    Bring up the visualization.
+    Add the contour of region.
+    """
+    brain = Brain(subjects_dir=subjects_dir, subject_id=subject_id, hemi=hemi, surf=surf, alpha=alpha)
+
+    if hemi == 'both':
+        brain.add_contour_overlay(region[0], min=region[0].min(), max=region[0].max(), n_contours=2, line_width=1.5,
+                                  colormap="YlOrRd_r", hemi='lh', remove_existing=True, colorbar=False)
+        brain.add_overlay(coords[0], min=coords[0][coords[0] > 0].min(),
+                          max=coords[0].max(), sign='pos', hemi='lh', name='lh')
+        brain.add_contour_overlay(region[1], min=region[1].min(), max=region[1].max(), n_contours=2, line_width=1.5,
+                                  colormap="YlOrRd_r", hemi='rh', remove_existing=False, colorbar=False)
+        brain.add_overlay(coords[1], min=coords[1][coords[1] > 0].min(),
+                          max=coords[1].max(), sign='pos', hemi='rh', name='rh')
+    elif hemi == 'lh':
+        brain.add_contour_overlay(region[0], min=region[0].min(),
+                                  max=region[0].max(), n_contours=2, line_width=1.5,
+                                  colormap="YlOrRd_r", hemi='lh', remove_existing=True, colorbar=False)
+        brain.add_overlay(coords[0], min=coords[0][coords[0] > 0].min(),
+                          max=coords[0].max(), sign='pos', hemi='lh', name='lh')
+    else:
+        brain.add_contour_overlay(region[1], min=region[1].min(),
+                                  max=region[1].max(), n_contours=2, line_width=1.5,
+                                  colormap="YlOrRd_r", hemi='rh', remove_existing=True, colorbar=False)
+        brain.add_overlay(coords[1], min=coords[1][coords[1] > 0].min(),
                           max=coords[1].max(), sign='pos', hemi='rh', name='rh')
 
     mlab.show()
