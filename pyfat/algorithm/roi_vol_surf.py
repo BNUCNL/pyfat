@@ -9,15 +9,6 @@ from nibabel.affines import apply_affine
 from nibabel.spatialimages import ImageFileError
 
 
-def voll_volr_merge(l_vol, r_vol):
-    """Merge l_vol r_vol"""
-    img_data = nib.load(l_vol).get_data()
-    img2_data = nib.load(r_vol).get_data()
-    img_data += img2_data
-
-    return img_data
-
-
 def roi_vol2surf(roi_vol_path, geo_path):
     """Transform rois from volume to surface."""
     # load volume roi file
