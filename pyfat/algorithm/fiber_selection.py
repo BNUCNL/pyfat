@@ -81,13 +81,13 @@ def select_by_surf_rois(streamlines_ori, surf_rois, geo_path, include=[True, Tru
     dist_lh = cdist(coords_lh[surf_rois[0] > 0], stream_terminus_lh)
     lh_stream_index = np.array(len(streamlines) * [False])
     for i in range(len(dist_lh[:])):
-        temp_index = np.array(dist_lh[i] < 2)
+        temp_index = np.array(dist_lh[i] < 5)
         lh_stream_index += temp_index
 
     dist_rh = cdist(coords_rh[surf_rois[1] > 0], stream_terminus_rh)
     rh_stream_index = np.array(len(streamlines) * [False])
     for j in range(len(dist_rh[:])):
-        temp_index = np.array(dist_rh[j] < 2)
+        temp_index = np.array(dist_rh[j] < 5)
         rh_stream_index += temp_index
 
     lh_rois_streamlines = streamlines_ori[lh_stream_index]
