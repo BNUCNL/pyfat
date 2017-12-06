@@ -329,3 +329,14 @@ class FibSelection(object):
         # labels_data = zip(set(labels), fib_clusters)
         label_data = fib_clusters[label_in]
         return label_data
+
+    def fib_plenium(self, y):
+        """Extract plenium fiber according to y values"""
+        fasciculus_data = self._fasciculus.get_data()
+        index = len(fasciculus_data) * [False]
+        for i in range(len(fasciculus_data)):
+            if fasciculus_data[i][0][1] < y or fasciculus_data[i][-1][1] < y:
+                index[i] = True
+        fasciculus_data = fasciculus_data[index]
+
+        return fasciculus_data
