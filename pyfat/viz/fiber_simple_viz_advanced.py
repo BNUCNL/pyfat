@@ -14,7 +14,8 @@ the main functions using the following modules.
 import numpy as np
 from dipy.viz import actor, window, ui
 
-def fiber_simple_3d_show_advanced(img, streamlines, s, world_coords=True, slicer_opacity=0.6):
+
+def fiber_simple_3d_show_advanced(img, streamlines, colors, s, world_coords=True, slicer_opacity=0.6):
 
     streamlines = streamlines
     data = img.get_data()
@@ -44,7 +45,7 @@ def fiber_simple_3d_show_advanced(img, streamlines, s, world_coords=True, slicer
     """
 
     ren = window.Renderer()
-    stream_actor = actor.line(streamlines)
+    stream_actor = actor.line(streamlines, colors=colors)
 
     if not world_coords:
         image_actor_z = actor.slicer(data, affine=np.eye(4))
