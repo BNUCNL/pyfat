@@ -258,8 +258,10 @@ class Fasciculus(object):
         else:
             raise ValueError("Data dimension does not match.")
 
-    def xmin_nodes(self):
+    def xmin_nodes(self, data=None):
         """Extract xmin nodes"""
+        if data is not None:
+            self._data = data
         xmin_nodes = nibas.ArraySequence()
         for i in range(len(self._data)):
             l = self._data[i][:, 0]
