@@ -9,6 +9,7 @@ from dipy.segment.quickbundles import QuickBundles
 import nibabel.streamlines.array_sequence as nibas
 
 from pyfat.core.dataobject import Fasciculus
+from pyfat.algorithm.node_clustering import NodeClustering
 from pyfat.viz.visualization import show
 
 
@@ -91,8 +92,12 @@ class FibClustering(object):
 
         return labels, length_clusters
 
-    def bundle_seg(self, streamlines, dist_thre=10.0, pts=12):
+    def bundle_seg(self, streamlines=None, dist_thre=10.0, pts=12):
         """QuickBundles-based segmentation"""
+        if streamlines is None:
+            streamlines = self._fasciculus.get_data()
+        else:
+            streamlines = streamlines
         bundles = QuickBundles(streamlines, dist_thre, pts)
         clusters = bundles.clusters()
         labels = np.array(len(streamlines) * [None])
@@ -107,8 +112,12 @@ class FibClustering(object):
 
         return labels, data_clusters, N_list
 
-    def bundle_thre_seg(self, streamlines, cluster_thre=10, dist_thre=10.0, pts=12):
+    def bundle_thre_seg(self, streamlines=None, cluster_thre=10, dist_thre=10.0, pts=12):
         """QuickBundles-based segmentation"""
+        if streamlines is None:
+            streamlines = self._fasciculus.get_data()
+        else:
+            streamlines = streamlines
         bundles = QuickBundles(streamlines, dist_thre, pts)
         bundles.remove_small_clusters(cluster_thre)
         clusters = bundles.clusters()
@@ -121,15 +130,23 @@ class FibClustering(object):
 
         return sort_index, data_clusters
 
-    def bundle_centroids(self, streamlines, cluster_thre=10, dist_thre=10.0, pts=12):
+    def bundle_centroids(self, streamlines=None, cluster_thre=10, dist_thre=10.0, pts=12):
         """QuickBundles-based segmentation"""
+        if streamlines is None:
+            streamlines = self._fasciculus.get_data()
+        else:
+            streamlines = streamlines
         bundles = QuickBundles(streamlines, dist_thre, pts)
         bundles.remove_small_clusters(cluster_thre)
         centroids = bundles.centroids
 
         return nibas.ArraySequence(centroids)
 
-    def terminus_symmetry(self, streamlines, dist_thre=5.0):
+    def terminus_symmetry(self, streamlines=None, dist_thre=5.0):
+        if streamlines is None:
+            streamlines = self._fasciculus.get_data()
+        else:
+            streamlines = streamlines
         dist = np.array([sqrt(pow(abs(s[0][0])-abs(s[-1][0]), 2) +
                               pow(s[0][1]-s[-1][1], 2) + pow(s[0][2]-s[-1][2], 2))
                          for s in streamlines])
@@ -138,8 +155,40 @@ class FibClustering(object):
 
         return term_sym_streamlines
 
+    def endpoints_seg(self, streamlines=None, temp_clusters=5000, thre=2.0, mode='lh'):
+        """
+        Endpoints-based clustering fibers
+        mode:'lh','rh','lh-cc','rh-cc','lh-rh'
+        """
+        if streamlines is None:
+            streamlines = self._fasciculus.get_data()
+        else:
+            streamlines = streamlines
 
+        streamlines = self._fasciculus.sort_streamlines(streamlines)
+        endpoints_l = nibas.ArraySequence([fib[0] for fib in streamlines])
+        endpoints_r = nibas.ArraySequence([fib[-1] for fib in streamlines])
+        endpoints_cc = self._fasciculus.xmin_nodes(streamlines)
 
-    def voxel_seg(self):
-        """Voxel-based clustering"""
-        pass
+        if mode == 'lh':
+            nc = NodeClustering(endpoints_l)
+            labels = nc.hiera_single_clust(temp_clusters=temp_clusters, t=thre)
+        elif mode == 'rh':
+            nc = NodeClustering(endpoints_r)
+            labels = nc.hiera_single_clust(temp_clusters=temp_clusters, t=thre)
+        elif mode == 'lh-cc':
+            endpoints_l_cc = nibas.ArraySequence(np.hstack((endpoints_l, endpoints_cc)))
+            nc = NodeClustering(endpoints_l_cc)
+            labels = nc.hiera_single_clust(temp_clusters=temp_clusters, t=thre)
+        elif mode == 'rh-cc':
+            endpoints_r_cc = nibas.ArraySequence(np.hstack((endpoints_r, endpoints_cc)))
+            nc = NodeClustering(endpoints_r_cc)
+            labels = nc.hiera_single_clust(temp_clusters=temp_clusters, t=thre)
+        elif mode == 'lh-rh':
+            endpoints_l_r = nibas.ArraySequence(np.hstack((endpoints_l, endpoints_r)))
+            nc = NodeClustering(endpoints_l_r)
+            labels = nc.hiera_single_clust(temp_clusters=temp_clusters, t=thre)
+        else:
+            raise ValueError("Without this mode!")
+
+        return labels
