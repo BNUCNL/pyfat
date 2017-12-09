@@ -192,3 +192,36 @@ class FibClustering(object):
             raise ValueError("Without this mode!")
 
         return labels
+
+    def hemisphere_cc(self, streamlines=None, hemi='lh'):
+        """
+        hemi:'lh','rh','both'
+        """
+        if streamlines is None:
+            streamlines = self._fasciculus.get_data()
+        else:
+            streamlines = streamlines
+
+        streamlines = self._fasciculus.sort_streamlines(streamlines)
+        hemi_fib = nibas.ArraySequence()
+        for i in range(len(streamlines)):
+            l = streamlines[i][:, 0]
+            l_ahead = list(l[:])
+            a = l_ahead.pop(0)
+            l_ahead.append(a)
+            x_stemp = np.array([l, l_ahead])
+            x_stemp_index = x_stemp.prod(axis=0)
+            index0 = np.argwhere(x_stemp_index <= 0)
+            index_term = np.argmin((abs(streamlines[i][index0[0][0]][0]),
+                                    abs(streamlines[i][index0[0][0] + 1][0])))
+            index = index0[0][0] + index_term
+            if hemi == 'lh':
+                hemi_fib.append(streamlines[i][:index + 1])
+            elif hemi == 'rh':
+                hemi_fib.append(streamlines[i][index:])
+            elif hemi == 'both':
+                hemi_fib.append(streamlines[i])
+            else:
+                raise ValueError("Without this mode!")
+
+        return hemi_fib
