@@ -1,6 +1,8 @@
 # !/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import division
+
 import os
 import numpy as np
 import nibabel as nib
@@ -101,3 +103,42 @@ def endpoints_axis2cc(vol_path, streamlines_path, axis='y', mode='max'):
             counts_r[fibs_points[i][0], fibs_points[i][1], fibs_points[i][2]] = endpoints_r[inddex].mean()
 
     return counts_l, counts_r
+
+
+def cc_seg_mp(vol_path, streamlines_path, labels):
+    img = nib.load(vol_path)
+    dim4 = (len(set(labels)),)
+    cc_mp = np.zeros(img.shape + dim4, dtype=float)
+    fasciculus = Fasciculus(streamlines_path)
+    streamlines = fasciculus.get_data()
+    fibs_points = apply_affine(npl.inv(img.affine), fasciculus.xmin_nodes()).astype(int)
+    for i in range(len(streamlines)):
+        index_i = fibs_points == np.array([fibs_points[i][0], fibs_points[i][1], fibs_points[i][2]])
+        index_i = index_i.sum(axis=1)
+        inddex = index_i == 3
+        voxel_counts = np.sum(index_i == 3)
+        dim4_value = []
+        for label in set(labels):
+            index_lab = labels == label
+            arr = np.vstack((inddex, index_lab)).sum(axis=0)
+            dim4_value.append(np.sum(arr == 2) / voxel_counts)
+        cc_mp[fibs_points[i][0], fibs_points[i][1], fibs_points[i][2]] = dim4_value
+
+    return cc_mp
+
+
+def cc_seg_mpm(pm, threshold):
+    """
+    Make maximum probabilistic map (mpm)
+    ---------------------------------------
+    Parameters:
+        pm: probabilistic map
+        threshold: threholds to mask probabilistic maps
+    Return:
+        mpm: maximum probabilisic map
+    """
+    pm_temp = np.empty((pm.shape[0], pm.shape[1], pm.shape[2], pm.shape[3]+1))
+    pm_temp[..., range(1, pm.shape[3]+1)] = pm
+    pm_temp[pm_temp < threshold] = 0
+    mpm = np.argmax(pm_temp, axis=3)
+    return mpm
