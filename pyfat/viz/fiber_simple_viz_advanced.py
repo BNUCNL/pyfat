@@ -15,7 +15,7 @@ import numpy as np
 from dipy.viz import actor, window, ui
 
 
-def fiber_simple_3d_show_advanced(img, streamlines, colors, s='png', world_coords=True, slicer_opacity=0.6):
+def fiber_simple_3d_show_advanced(img, streamlines, colors=None, s='png', world_coords=True, slicer_opacity=0.6):
 
     streamlines = streamlines
     data = img.get_data()
