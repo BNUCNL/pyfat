@@ -41,7 +41,7 @@ def save_tck(streamline=None, header=None, data_per_streamline=None,
     datdat = nibtck.TckFile(tractogram=tractogram, header=header)
     datdat.save(out_path)
 
-def save_nifti(volume, affine, output):
+def save_nifti(volume, affine, output, dtype = "int16"):
     '''
 
     :param volume: input volume data
@@ -49,5 +49,5 @@ def save_nifti(volume, affine, output):
     :param output: save filename
     :return:
     '''
-    dm_img = nib.Nifti1Image(volume.astype("int16"), affine)
+    dm_img = nib.Nifti1Image(volume.astype(dtype), affine)
     dm_img.to_filename(output)
