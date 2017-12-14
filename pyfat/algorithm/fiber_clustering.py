@@ -158,7 +158,7 @@ class FibClustering(object):
     def endpoints_seg(self, streamlines=None, temp_clusters=5000, thre=2.0, mode='lh'):
         """
         Endpoints-based clustering fibers
-        mode:'lh','rh','lh-cc','rh-cc','lh-rh'
+        mode:'lh','rh','cc','lh-cc','rh-cc','lh-rh'
         """
         if streamlines is None:
             streamlines = self._fasciculus.get_data()
@@ -175,6 +175,9 @@ class FibClustering(object):
             labels = nc.hiera_single_clust(temp_clusters=temp_clusters, t=thre)
         elif mode == 'rh':
             nc = NodeClustering(endpoints_r)
+            labels = nc.hiera_single_clust(temp_clusters=temp_clusters, t=thre)
+        elif mode == 'cc':
+            nc = NodeClustering(endpoints_cc)
             labels = nc.hiera_single_clust(temp_clusters=temp_clusters, t=thre)
         elif mode == 'lh-cc':
             endpoints_l_cc = nibas.ArraySequence(np.hstack((endpoints_l, endpoints_cc)))
