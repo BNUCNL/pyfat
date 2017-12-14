@@ -6,6 +6,7 @@ import nibabel as nib
 from nibabel import streamlines
 import nibabel.streamlines.tck as nibtck
 
+
 def save_tck(streamline=None, header=None, data_per_streamline=None,
          data_per_point=None, affine_to_rasmm=None, out_path=None):
     '''
@@ -41,7 +42,8 @@ def save_tck(streamline=None, header=None, data_per_streamline=None,
     datdat = nibtck.TckFile(tractogram=tractogram, header=header)
     datdat.save(out_path)
 
-def save_nifti(volume, affine, output, dtype = "int16"):
+
+def save_nifti(volume, affine, output, dtype="float32"):
     '''
 
     :param volume: input volume data
