@@ -290,6 +290,23 @@ class Fasciculus(object):
                 fasciculus_data_sort.append(fasciculus_data[i][::-1])
         return fasciculus_data_sort
 
+    def hemi_fib_separation(self, data=None):
+        """Separation of fibers that left and right hemispheres as seeds generated"""
+        if data is not None:
+            fasciculus_data = data
+        else:
+            fasciculus_data = self._data
+
+        fib_lh = nibas.ArraySequence()
+        fib_rh = nibas.ArraySequence()
+        for fib in fasciculus_data:
+            if fib[0][0] < 0:
+                fib_lh.append(fib)
+            elif fib[0][0] > 0:
+                fib_rh.append(fib)
+
+        return fib_lh, fib_rh
+
     def save2tck(self, file_path):
         """Save to a tck file"""
         tractogram = nibtcg.Tractogram(streamlines=self._data, data_per_streamline=self._data_per_streamline,
