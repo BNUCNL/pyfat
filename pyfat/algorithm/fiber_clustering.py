@@ -155,7 +155,7 @@ class FibClustering(object):
 
         return term_sym_streamlines
 
-    def endpoints_seg(self, streamlines=None, temp_clusters=5000, thre=2.0, mode='lh'):
+    def endpoints_seg(self, streamlines=None, temp_clusters=None, thre=2.0, mode='lh'):
         """
         Endpoints-based clustering fibers
         mode:'lh','rh','cc','lh-cc','rh-cc','lh-rh'
@@ -164,6 +164,9 @@ class FibClustering(object):
             streamlines = self._fasciculus.get_data()
         else:
             streamlines = streamlines
+
+        if temp_clusters is None:
+            temp_clusters = len(streamlines)
 
         streamlines = self._fasciculus.sort_streamlines(streamlines)
         endpoints_l = nibas.ArraySequence([fib[0] for fib in streamlines])
