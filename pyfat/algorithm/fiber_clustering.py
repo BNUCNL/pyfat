@@ -4,6 +4,9 @@
 # vi: set ft=python sts=4 ts=4 sw=4 et:l
 
 import numpy as np
+import nibabel as nib
+import numpy.linalg as npl
+from nibabel.affines import apply_affine
 from math import sqrt, pow
 from dipy.segment.quickbundles import QuickBundles
 import nibabel.streamlines.array_sequence as nibas
@@ -231,3 +234,29 @@ class FibClustering(object):
                 raise ValueError("Without this mode!")
 
         return hemi_fib
+
+    def cluster_by_vol_rois(self, rois_path, streamlines=None):
+        """
+        Clustering fibers by vol_rois
+        """
+        img = nib.load(rois_path)
+        rois = img.get_data()
+        if streamlines is None:
+            streamlines = self._fasciculus.get_data()
+        else:
+            streamlines = streamlines
+
+        streamlines = self._fasciculus.sort_streamlines(streamlines)
+
+        labels = np.array(len(streamlines) * [None])
+
+        for i in range(len(streamlines)):
+            coords = apply_affine(npl.inv(img.affine), streamlines[i]).astype(int)
+            count = np.array(int(rois.max()) * [0])
+            for j in range(len(coords)):
+                if rois[coords[j][0], coords[j][1], coords[j][2]] != 0:
+                    count[int(rois[coords[j][0], coords[j][1], coords[j][2]]) - 1] += 1
+
+            labels[i] = count.argmax() + 1
+
+        return labels
