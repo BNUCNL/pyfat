@@ -158,7 +158,7 @@ class Fasciculus(object):
         counts = len(self._data)
         return counts
 
-    def get_labes(self):
+    def get_labels(self):
         return self._labels
 
     def get_labels_data(self):
@@ -185,6 +185,7 @@ class Fasciculus(object):
             raise ValueError("max_value must be in the range of %s to %s." % (self._lengths_min, self._lengths_max))
 
     def get_x_gradient(self):
+        """The sum of the change of streamline gradient along the x axis direction. """
         x_gradient = []
         for i in range(len(self._data)):
             x = self._data[i][:, 0]
@@ -198,6 +199,7 @@ class Fasciculus(object):
         return x_gradient
 
     def get_y_gradient(self):
+        """The sum of the change of streamline gradient along the y axis direction. """
         y_gradient = []
         for i in range(len(self._data)):
             y = self._data[i][:, 1]
@@ -211,6 +213,7 @@ class Fasciculus(object):
         return y_gradient
 
     def get_z_gradient(self):
+        """The sum of the change of streamline gradient along the z axis direction. """
         z_gradient = []
         for i in range(len(self._data)):
             z = self._data[i][:, 2]
@@ -224,14 +227,17 @@ class Fasciculus(object):
         return z_gradient
 
     def get_mean_curvature(self):
+        """Mean curvature of each streamline."""
         mean_curvature = [dtm.mean_curvature(stream) for stream in self._data]
         return mean_curvature
 
     def get_mean_orientation(self):
+        """Mean orientation of each streamline."""
         mean_orientation = [dtm.mean_orientation(stream) for stream in self._data]
         return mean_orientation
 
     def get_lr_ratio(self):
+        """Ratio of point or length in left and right, respectively."""
         r = []
         for i in range(len(self._data)):
             if len(self._data[i][:, 0][self._data[i][:, 0] <= 0]) == 0 or \
@@ -246,12 +252,14 @@ class Fasciculus(object):
         return r
 
     def set_labels(self, labels):
+        """Set label of each streamline."""
         if len(labels) == len(self._labels):
             self._labels = labels
         else:
             raise ValueError("Data dimension does not match.")
 
     def set_labels_data(self, labels):
+        """Combine label and streamline to make them become a pair."""
         if len(labels) == len(self._data):
             self._labels = labels
             self._labels_data = zip(self._labels, self._data)
@@ -259,7 +267,7 @@ class Fasciculus(object):
             raise ValueError("Data dimension does not match.")
 
     def xmin_nodes(self, data=None):
-        """Extract xmin nodes"""
+        """Extract node that has the minimum |x|."""
         if data is not None:
             self._data = data
         xmin_nodes = nibas.ArraySequence()
@@ -278,6 +286,7 @@ class Fasciculus(object):
         return xmin_nodes
 
     def sort_streamlines(self, data=None):
+        """Store order of streamline is from left to right."""
         if data is not None:
             fasciculus_data = data
         else:
@@ -286,12 +295,15 @@ class Fasciculus(object):
         for i in range(len(fasciculus_data)):
             if fasciculus_data[i][0][0] < 0:
                 fasciculus_data_sort.append(fasciculus_data[i])
-            else:
+            elif fasciculus_data[i][0][0] > 0 \
+                    and fasciculus_data[i][-1][0] < 0:
                 fasciculus_data_sort.append(fasciculus_data[i][::-1])
+            else:
+                fasciculus_data_sort.append(fasciculus_data[i])
         return fasciculus_data_sort
 
     def hemi_fib_separation(self, data=None):
-        """Separation of fibers that left and right hemispheres as seeds generated"""
+        """Separation of streamlines that have different hemispheres as seeds."""
         if data is not None:
             fasciculus_data = data
         else:
@@ -304,6 +316,47 @@ class Fasciculus(object):
                 fib_lh.append(fib)
             elif fib[0][0] > 0:
                 fib_rh.append(fib)
+
+        return fib_lh, fib_rh
+
+    def hemi_fib_merge(self, data):
+        """self._data merge with data"""
+        fib = nibas.ArraySequence()
+        for i in range(len(self._data)):
+            fib.append(self._data[i])
+        for j in range(len(data)):
+            flag = np.array([np.array(f == data[j]).all() for f in self._data]).any()
+            if flag:
+                continue
+            fib.append(data[j])
+
+        return fib
+
+    def separation_fib_to_hemi(self, data=None):
+        """Separating a bundle fiber to both hemispheres"""
+        if data is None:
+            streamlines = self._data
+        else:
+            streamlines = data
+
+        streamlines = self.sort_streamlines(streamlines)
+        fib_lh = nibas.ArraySequence()
+        fib_rh = nibas.ArraySequence()
+
+        for i in range(len(streamlines)):
+            l = streamlines[i][:, 0]
+            l_ahead = list(l[:])
+            a = l_ahead.pop(0)
+            l_ahead.append(a)
+            x_stemp = np.array([l, l_ahead])
+            x_stemp_index = x_stemp.prod(axis=0)
+            index0 = np.argwhere(x_stemp_index <= 0)
+            index_term = np.argmin((abs(streamlines[i][index0[0][0]][0]),
+                                    abs(streamlines[i][index0[0][0] + 1][0])))
+            index = index0[0][0] + index_term
+
+            fib_lh.append(streamlines[i][:index + 1])
+            fib_rh.append(streamlines[i][index:])
 
         return fib_lh, fib_rh
 
@@ -387,8 +440,7 @@ class SurfaceGeometry(object):
     def get_bin_curv(self):
         """
         load and get binarized curvature (gyrus' curvature<0, sulcus's curvature>0)
-        :return:
-            binarized curvature
+        return: binarized curvature
         """
         curv_name = '{}.curv'.format(self.hemi_rl)
         curv_path = os.path.join(self.surf_dir, curv_name)

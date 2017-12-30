@@ -13,6 +13,7 @@ import nibabel.streamlines.array_sequence as nibas
 
 
 def _sort_streamlines(fasciculus_data):
+    """Store order of streamline is from left to right."""
     fasciculus_data_sort = nibas.ArraySequence()
     for i in range(len(fasciculus_data)):
         if fasciculus_data[i][0][0] < 0:
@@ -25,6 +26,16 @@ def _sort_streamlines(fasciculus_data):
 def select_by_vol_roi(streamlines, target_mask, affine, include=True):
     """
     Include or exclude the streamlines according to a ROI
+    Parameters
+    ----------
+    streamlines: streamline data
+    target_mask: volume roi
+    affine: project streamline to roi space
+    include: True or False (include or exclude)
+
+    Return
+    ------
+    roi_streamlines: extracted streamlines
     """
     roi_selection = utils.target(streamlines=streamlines, target_mask=target_mask,
                                  affine=affine, include=include)
@@ -37,7 +48,7 @@ def select_by_vol_rois(streamlines, rois, include, mode=None, affine=None, tol=N
     """
     Include or exclude the streamlines according to some ROIs
     example
-    >>>selection = select_by_rois(streamlines, [mask1, mask2], [True, False], mode="both_end", tol=1.0)
+    >>>selection = select_by_vol_rois(streamlines, [mask1, mask2], [True, False], mode="both_end", tol=1.0)
     >>>selection = list(selection)
     """
     rois_selection = streamline.select_by_rois(streamline=streamline, rois=rois,
@@ -50,6 +61,17 @@ def select_by_vol_rois(streamlines, rois, include, mode=None, affine=None, tol=N
 def select_by_surf_rois(streamlines_ori, surf_rois, geo_path, include=[True, True]):
     """
     Include or exclude the streamlines according to some surface ROIs
+    Parameters
+    ----------
+    streamlines_ori: origin streamlines
+    surf_rois: left and right surface rois
+    geo_path: left and right surface geometry
+
+    Return
+    ------
+    lh_rois_streamlines: extracted streamlines by left roi
+    rh_rois_streamlines: extracted streamlines by right roi
+    lrh_rois_streamlines: intersection of lh_rois_streamlines and rh_rois_streamlines
     """
     streamlines = _sort_streamlines(streamlines_ori)
     s0 = [s[0] for s in streamlines]

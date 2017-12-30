@@ -24,7 +24,7 @@ class FibClustering(object):
 
         Parameters
         ----------
-        fasciculus : whole fasciculus
+        fasciculus :
         An object of class Fasciculus
 
         Return
@@ -50,7 +50,14 @@ class FibClustering(object):
         return index, length_seg_data
 
     def length_seg(self):
-        """Length-based segmentation"""
+        """
+        Length-based segmentation
+
+        Return
+        ------
+        labels: label of each streamline
+        length_clusters: cluster data
+        """
         length_clusters = nibas.ArraySequence()
         labels = np.array(len(self._fasciculus.get_data()) * [None])
         length_seg_temp = self._length_seg(20, 50)
@@ -96,7 +103,20 @@ class FibClustering(object):
         return labels, length_clusters
 
     def bundle_seg(self, streamlines=None, dist_thre=10.0, pts=12):
-        """QuickBundles-based segmentation"""
+        """
+        QuickBundles-based segmentation
+        Parameters
+        ----------
+        streamlines: streamline data
+        dist_thre: clustering threshold (distance mm)
+        pts: each streamlines are divided into sections
+
+        Return
+        ------
+        labels: label of each streamline
+        data_cluster: cluster data
+        N_list: size of each cluster
+        """
         if streamlines is None:
             streamlines = self._fasciculus.get_data()
         else:
@@ -116,7 +136,20 @@ class FibClustering(object):
         return labels, data_clusters, N_list
 
     def bundle_thre_seg(self, streamlines=None, cluster_thre=10, dist_thre=10.0, pts=12):
-        """QuickBundles-based segmentation"""
+        """
+        QuickBundles-based segmentation
+        Parameters
+        ----------
+        streamlines: streamline data
+        cluster_thre: remove small cluster
+        dist_thre: clustering threshold (distance mm)
+        pts: each streamlines are divided into sections
+
+        Return
+        ------
+        sort_index: sort of clusters according to y mean of cluster's centroids
+        data_cluster: cluster data corresponding to sort_index
+        """
         if streamlines is None:
             streamlines = self._fasciculus.get_data()
         else:
@@ -134,7 +167,19 @@ class FibClustering(object):
         return sort_index, data_clusters
 
     def bundle_centroids(self, streamlines=None, cluster_thre=10, dist_thre=10.0, pts=12):
-        """QuickBundles-based segmentation"""
+        """
+        QuickBundles-based segmentation
+        Parameters
+        ----------
+        streamlines: streamline data
+        cluster_thre: remove small cluster
+        dist_thre: clustering threshold (distance mm)
+        pts: each streamlines are divided into sections
+
+        Return
+        ------
+        centroids: cluster's centroids
+        """
         if streamlines is None:
             streamlines = self._fasciculus.get_data()
         else:
@@ -146,6 +191,17 @@ class FibClustering(object):
         return nibas.ArraySequence(centroids)
 
     def terminus_symmetry(self, streamlines=None, dist_thre=5.0):
+        """
+        Extract streamlines that have symmetrical terminus/endpoints
+        Parameters
+        ----------
+        streamlines: streamline data
+        dist_thre: symmetry distance threshold
+
+        Return
+        ------
+        term_sym_streamlines: endpoints meet the symmetry of the streamlines
+        """
         if streamlines is None:
             streamlines = self._fasciculus.get_data()
         else:
@@ -161,7 +217,16 @@ class FibClustering(object):
     def endpoints_seg(self, streamlines=None, temp_clusters=None, thre=2.0, mode='lh'):
         """
         Endpoints-based clustering fibers
-        mode:'lh','rh','cc','lh-cc','rh-cc','lh-rh'
+        Parameters
+        ----------
+        streamlines: streamline data
+        temp_clusters: the number of k-means iterations (the first step to use k-means when data set is too big)
+        thre: hierarchical/agglomerative clustering threshold (distance mm)
+        mode:'lh','rh','lh-rh'(left endpoints, right endpoints or left right endpoints)
+
+        Return
+        ------
+        labels: label of each streamline
         """
         if streamlines is None:
             streamlines = self._fasciculus.get_data()
@@ -174,24 +239,12 @@ class FibClustering(object):
         streamlines = self._fasciculus.sort_streamlines(streamlines)
         endpoints_l = nibas.ArraySequence([fib[0] for fib in streamlines])
         endpoints_r = nibas.ArraySequence([fib[-1] for fib in streamlines])
-        endpoints_cc = self._fasciculus.xmin_nodes(streamlines)
 
         if mode == 'lh':
             nc = NodeClustering(endpoints_l)
             labels = nc.hiera_single_clust(temp_clusters=temp_clusters, t=thre)
         elif mode == 'rh':
             nc = NodeClustering(endpoints_r)
-            labels = nc.hiera_single_clust(temp_clusters=temp_clusters, t=thre)
-        elif mode == 'cc':
-            nc = NodeClustering(endpoints_cc)
-            labels = nc.hiera_single_clust(temp_clusters=temp_clusters, t=thre)
-        elif mode == 'lh-cc':
-            endpoints_l_cc = nibas.ArraySequence(np.hstack((endpoints_l, endpoints_cc)))
-            nc = NodeClustering(endpoints_l_cc)
-            labels = nc.hiera_single_clust(temp_clusters=temp_clusters, t=thre)
-        elif mode == 'rh-cc':
-            endpoints_r_cc = nibas.ArraySequence(np.hstack((endpoints_r, endpoints_cc)))
-            nc = NodeClustering(endpoints_r_cc)
             labels = nc.hiera_single_clust(temp_clusters=temp_clusters, t=thre)
         elif mode == 'lh-rh':
             endpoints_l_r = nibas.ArraySequence(np.hstack((endpoints_l, endpoints_r)))
@@ -204,7 +257,15 @@ class FibClustering(object):
 
     def hemisphere_cc(self, streamlines=None, hemi='lh'):
         """
+        Select a particular hemisphere streamlines to display
+        Parameters
+        ----------
+        streamlines: streamline data
         hemi:'lh','rh','both'
+
+        Return
+        ------
+        hemi_fib: particular hemisphere streamlines
         """
         if streamlines is None:
             streamlines = self._fasciculus.get_data()
@@ -237,7 +298,15 @@ class FibClustering(object):
 
     def cluster_by_vol_rois(self, rois_path, streamlines=None):
         """
-        Clustering fibers by vol_rois
+        Clustering fibers by vol_rois, according to the number of streamline through rois
+        Parameters
+        ----------
+        rois_path: volume rois path
+        streamlines: streamline data
+
+        Return
+        ------
+        labels: label each streamline
         """
         img = nib.load(rois_path)
         rois = img.get_data()
@@ -258,5 +327,40 @@ class FibClustering(object):
                     count[int(rois[coords[j][0], coords[j][1], coords[j][2]]) - 1] += 1
 
             labels[i] = count.argmax() + 1
+
+        return labels
+
+    def cluster_endpoints_by_vol_rois(self, rois_path, streamlines=None, mode='lh'):
+        """
+        Clustering fiber endpoints by vol_rois, according to the endpoints of streamline through rois
+        Parameters
+        ----------
+        rois_path: volume rois path
+        streamlines: streamline data
+        mode: 'lh', 'rh'
+
+        Return
+        ------
+        labels: label each streamline
+        """
+        img = nib.load(rois_path)
+        rois = img.get_data()
+        if streamlines is None:
+            streamlines = self._fasciculus.get_data()
+        else:
+            streamlines = streamlines
+
+        streamlines = self._fasciculus.sort_streamlines(streamlines)
+
+        labels = np.array(len(streamlines) * [None])
+
+        if mode == 'lh':
+            endpoints = [apply_affine(npl.inv(img.affine), fib[0]).astype(int) for fib in streamlines]
+        elif mode == 'rh':
+            endpoints = [apply_affine(npl.inv(img.affine), fib[-1]).astype(int) for fib in streamlines]
+
+        for i in range(len(endpoints)):
+            if rois[endpoints[i][0], endpoints[i][1], endpoints[i][2]] != 0:
+                labels[i] = int(rois[endpoints[i][0], endpoints[i][1], endpoints[i][2]])
 
         return labels

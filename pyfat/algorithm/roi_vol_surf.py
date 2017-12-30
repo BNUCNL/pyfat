@@ -10,7 +10,17 @@ from nibabel.spatialimages import ImageFileError
 
 
 def roi_vol2surf(roi_vol_path, geo_path):
-    """Transform rois from volume to surface."""
+    """
+    Transform rois from volume to surface.
+    Parameters
+    ----------
+    roi_vol_path: volume roi path
+    geo_path: left and right surface geometry path
+
+    Return
+    ------
+    left and right surface rois
+    """
     # load volume roi file
     roi_img = nib.load(roi_vol_path)
     img_data = roi_img.get_data()
@@ -52,6 +62,14 @@ def roi_vol2surf(roi_vol_path, geo_path):
 def label2surf_roi(label, geo_path):
     """
     From .label to surface vertex value.
+    Parameters
+    ----------
+    label: .label file path
+    geo_path: surface geometry path
+
+    Return
+    ------
+    left and right surface roi
     """
     # load surf geometry
     suffix = os.path.split(geo_path[0])[1].split('.')[-1]
@@ -88,7 +106,18 @@ def label2surf_roi(label, geo_path):
 
 
 def roi_surf2vol(roi_surf_path, geo_path, vol_path):
-    """Transform rois from surface to volume."""
+    """
+    Transform rois from surface to volume.
+    Parameters
+    ----------
+    roi_surf_path: surface roi path
+    geo_path: surface geometry path
+    vol_path: target volume
+
+    Return
+    ------
+    volume rois
+    """
     # load parcelltion data
     vertices, colortable, label = nib.freesurfer.read_annot(roi_surf_path)
 

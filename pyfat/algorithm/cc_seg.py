@@ -15,6 +15,14 @@ from pyfat.core.dataobject import Fasciculus
 def cc_seg_region(vol_path, roi_fib_paths_suffix):
     """
     Segment cc according to roi fibs
+    Parameters
+    ----------
+    vol_path: volume (T1w) data path
+    roi_fib_paths_suffix: all streamlines selected by rois (the sum of same kinds of areas)
+
+    Return
+    ------
+    Density of all streamlines mapping to the corpus callosum
     """
     img = nib.load(vol_path)
     counts = np.zeros(img.shape)
@@ -31,6 +39,14 @@ def cc_seg_region(vol_path, roi_fib_paths_suffix):
 def cc_seg_regions(vol_path, roi_fib_paths_suffix):
     """
     Segment cc according to roi fibs
+    Parameters
+    ----------
+    vol_path: volume (T1w) data path
+    roi_fib_paths_suffix: all streamlines selected by rois (the sum of different kinds of areas)
+
+    Return
+    ------
+    Density of all streamlines mapping to the corpus callosum
     """
     img = nib.load(vol_path)
     counts = np.zeros(img.shape)
@@ -48,7 +64,15 @@ def cc_seg_regions(vol_path, roi_fib_paths_suffix):
 
 def cc_seg_same_regions(vol_path, lr_region_path_suffix):
     """
-     Segment cc according to lr same regions.
+    Segment cc according to lr same regions.
+    Parameters
+    ----------
+    vol_path: volume (T1w) data path
+    lr_region_path_suffix: same region streamlines of both hemispheres
+
+    Return
+    ------
+    Density of lr-overlap streamlines mapping to the corpus callosum
     """
     img = nib.load(vol_path)
     counts = np.zeros(img.shape)
@@ -71,8 +95,17 @@ def cc_seg_same_regions(vol_path, lr_region_path_suffix):
 def endpoints_axis2cc(vol_path, streamlines_path, axis='y', mode='max'):
     """
     Endpoints of streamlines mapping to cc.
+    Parameters
+    ----------
+    vol_path: volume (T1w) data path
+    streamlines_path: streamlines path
     axis: 'x', 'y', 'z'
+        Choose which direction to project
     mode: 'max', 'min', 'mean'
+        Choose which typ to project
+    Return
+    ------
+    Density left and right endpoints, respectively
     """
     img = nib.load(vol_path)
     counts_l = np.zeros(img.shape)
@@ -106,6 +139,18 @@ def endpoints_axis2cc(vol_path, streamlines_path, axis='y', mode='max'):
 
 
 def cc_seg_mp(vol_path, streamlines_path, labels):
+    """
+    Make probabilistic map (pm)
+    Parameters
+    ----------
+    vol_path: volume (T1w) data path
+    streamlimes_path: streamlines path
+    labels: label of each streamline
+
+    Return
+    ------
+    pm: probabilisic map
+    """
     img = nib.load(vol_path)
     dim4 = (len(set(labels)),)
     cc_mp = np.zeros(img.shape + dim4, dtype=float)
@@ -130,12 +175,14 @@ def cc_seg_mp(vol_path, streamlines_path, labels):
 def cc_seg_mpm(pm, threshold):
     """
     Make maximum probabilistic map (mpm)
-    ---------------------------------------
-    Parameters:
-        pm: probabilistic map
-        threshold: threholds to mask probabilistic maps
-    Return:
-        mpm: maximum probabilisic map
+    Parameters
+    ----------
+    pm: probabilistic map
+    threshold: threholds to mask probabilistic maps
+
+    Return
+    ------
+    mpm: maximum probabilisic map
     """
     pm_temp = np.empty((pm.shape[0], pm.shape[1], pm.shape[2], pm.shape[3]+1))
     pm_temp[..., range(1, pm.shape[3]+1)] = pm

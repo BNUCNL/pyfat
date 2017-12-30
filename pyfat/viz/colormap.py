@@ -4,6 +4,7 @@
 
 import numpy as np
 from warnings import warn
+import line_profiler
 
 # Conditional import machinery for vtk
 from dipy.utils.optpkg import optional_package
