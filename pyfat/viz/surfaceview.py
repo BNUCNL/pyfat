@@ -17,6 +17,7 @@ from mayavi import mlab
 def surface_roi(subjects_dir, subject_id, hemi, surf, alpha, coords):
     """
     Bring up the visualization.
+    points mapping to surface as points
     """
     brain = Brain(subjects_dir=subjects_dir, subject_id=subject_id, hemi=hemi, surf=surf, alpha=alpha)
 
@@ -38,6 +39,7 @@ def surface_roi(subjects_dir, subject_id, hemi, surf, alpha, coords):
 def surface_streamlines_roi(subjects_dir, subject_id, hemi, surf, alpha, coords, streamlines=None):
     """
     Bring up the visualization.
+    streamlines as discrete points to display
     """
     brain = Brain(subjects_dir=subjects_dir, subject_id=subject_id, hemi=hemi, surf=surf, alpha=alpha)
 
@@ -64,6 +66,7 @@ def surface_streamlines_roi(subjects_dir, subject_id, hemi, surf, alpha, coords,
 def surface_streamlines_map(subjects_dir, subject_id, hemi, surf, alpha, coords):
     """
     Bring up the visualization.
+    display a map
     """
     brain = Brain(subjects_dir=subjects_dir, subject_id=subject_id, hemi=hemi, surf=surf, alpha=alpha)
 

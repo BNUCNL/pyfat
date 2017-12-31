@@ -88,7 +88,7 @@ class FibSelection(object):
 
     def lr_rat(self, ratio=1.5):
         """
-        Extract lr ratio fiber
+        Extract lr ratio (<1.5) fiber
         The function is implemented after function single_point_mid_sag
         """
         fasciculus_data = self._fasciculus.get_data()
@@ -319,7 +319,7 @@ class FibSelection(object):
         return node_total, fib_total
 
     def labels2fasc(self, label_in):
-        """Extract fasc according to labels"""
+        """Extract fasciculus according to labels"""
         fasciculus_data = self._fasciculus.get_data()
         labels = self._fasciculus.get_labes()
         fib_clusters = []

@@ -4,6 +4,7 @@
 
 import numpy as np
 from warnings import warn
+import line_profiler
 
 # Conditional import machinery for vtk
 from dipy.utils.optpkg import optional_package
@@ -307,4 +308,17 @@ def create_colormap(v, name='plasma', auto=True):
 
     rgba = colormap(v)
     rgb = rgba[:, :3].copy()
+    return rgb
+
+
+def create_random_colormap(v, rand_range=(0, 255)):
+    """
+    Create random colormap.
+    """
+    rgb = np.zeros([v, 3])
+    for i in range(v):
+        rgb[i, 0] = np.random.randint(rand_range[0], rand_range[1])
+        rgb[i, 1] = np.random.randint(rand_range[0], rand_range[1])
+        rgb[i, 2] = np.random.randint(rand_range[0], rand_range[1])
+
     return rgb

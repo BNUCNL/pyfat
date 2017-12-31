@@ -23,21 +23,17 @@ from nibabel.affines import apply_affine
 
 
 # fiber density of volume
-def fib_density_map(volume, fiber, output_path):
+def fib_density_map(volume, fiber):
     """
     fiber to volume density map
     Parameters
     ----------
-    volume : nifti img
-        nifti img
-    fiber : ArraySequence streamlines
-        streamlines
-    output : output path
-            output path nii.gz
+    volume : volume data
+    fiber : streamlines data
 
     Return
     ------
-    output file nii.gz
+    streamline density in each voxel
     """
     shape = volume.shape
     affine = volume.affine
@@ -45,11 +41,20 @@ def fib_density_map(volume, fiber, output_path):
     voxel_size = nib.affine.voxel_size(affine)
     image_volume = ditu.density_map(streamlines, vol_dims=shape, voxel_size=voxel_size, affine=affine)
 
-    dm_img = nib.Nifti1Image(image_volume.astype("int16"), affine)
-    dm_img.to_filename(output_path)
+    return image_volume
 
 
 def _sort_streamlines(fasciculus_data):
+    """
+    Store order of streamline is from left to right.
+    Parameters
+    ----------
+    fasciculus_data: streamlines data
+
+    Return
+    ------
+    sorted streamlines
+    """
     fasciculus_data_sort = nibas.ArraySequence()
     for i in range(len(fasciculus_data)):
         if fasciculus_data[i][0][0] < 0:
@@ -60,7 +65,17 @@ def _sort_streamlines(fasciculus_data):
 
 
 def terminus2surface_nearest_pts(streamlines, geo_path):
-    """Points project surface"""
+    """
+    Streamline endpoints mapping to surface
+    Parameters
+    ----------
+    streamlines: streamline data
+    geo_path: surface data path
+
+    Return
+    ------
+    endpoints map on surface
+    """
     streamlines = _sort_streamlines(streamlines)
     s0 = [s[0] for s in streamlines]
     s_t = [s[-1] for s in streamlines]
@@ -96,7 +111,17 @@ def terminus2surface_nearest_pts(streamlines, geo_path):
 
 
 def terminus2surface_map(streamlines, geo_path):
-    """Points mapping to surface"""
+    """
+    Streamline endpoints areas mapping to surface
+    Parameters
+    ----------
+    streamlines: streamline data
+    geo_path: surface data path
+
+    Return
+    ------
+    endpoints areas map on surface
+    """
     streamlines = _sort_streamlines(streamlines)
     s0 = [s[0] for s in streamlines]
     s_t = [s[-1] for s in streamlines]
@@ -132,8 +157,16 @@ def terminus2surface_map(streamlines, geo_path):
 
 def terminus2surface_density_map(streamlines, geo_path):
     """
-    Points mapping to surface
+    Streamline endpoints areas mapping to surface
     streamlines > 1000
+    Parameters
+    ----------
+    streamlines: streamline data
+    geo_path: surface data path
+
+    Return
+    ------
+    endpoints areas map on surface
     """
     streamlines = _sort_streamlines(streamlines)
     bundles = QuickBundles(streamlines, 10, 12)
@@ -191,6 +224,14 @@ def terminus2volume_nearest_vox(streamlines, volume_path):
     """
     Points mapping to volume
     streamlines > 1000
+    Parameters
+    ----------
+    streamlines: streamline data
+    volume_path: volume data path
+
+    Return
+    ------
+    endpoints map im volume
     """
     img = nib.load(volume_path)
     streamlines = _sort_streamlines(streamlines)
@@ -216,6 +257,14 @@ def terminus2volume_density_map(streamlines, volume_path):
     """
     Points mapping to volume
     streamlines > 1000
+    Parameters
+    ----------
+    streamlines: streamline data
+    volume_path: volume data path
+
+    Return
+    ------
+    endpoints areas map(26 direct neighbor points) im volume
     """
     img = nib.load(volume_path)
     streamlines = _sort_streamlines(streamlines)

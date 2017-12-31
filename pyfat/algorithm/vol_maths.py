@@ -58,3 +58,13 @@ def vold_volv_mpm(d_vol, v_vol):
     data_d[data_d < data_v] = 0
     data_v[data_v < data_d] = 0
     return data_d, data_v
+
+
+def vol_mask_vol(vol, mask):
+    """volume + mask"""
+    vol_data = nib.load(vol).get_data()
+    mask_data = nib.load(mask).get_data()
+
+    vol_mask_data = vol_data * mask_data
+
+    return vol_mask_data

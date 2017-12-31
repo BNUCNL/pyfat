@@ -26,6 +26,7 @@ def show(lengths, x=180, y=10000,
 
 
 def show_2d_node(img, Ls_temp):
+    """Points mapping to slice"""
     fig, ax = plt.subplots()
     slice = img.get_data()[img.shape[0]/2, :, :]
     Ls_temp = apply_affine(npl.inv(img.affine), Ls_temp)
@@ -36,6 +37,7 @@ def show_2d_node(img, Ls_temp):
 
 
 def show_dist_matrix(sdist):
+    """Display distance matrix"""
     name = range(sdist.shape[0])
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -50,6 +52,7 @@ def show_dist_matrix(sdist):
 
 
 def show_slice_density(img, Ls_temp):
+    """Show middle slice density"""
     fig, ax = plt.subplots()
     Ls_temp = np.array(Ls_temp)
     Ls_temp.T[0] = 0

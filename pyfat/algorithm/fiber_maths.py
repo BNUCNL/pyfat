@@ -17,18 +17,23 @@ from dipy.align.streamlinear import StreamlineLinearRegistration
 
 def coordinate_dist(coordinate, metric='euclidean'):
     """
-    coordinate distance
-    :param coordinate: ndarray
+    Compute coordinate distance
+    Parameters
+    ----------
+    coordinate: ndarray
         An m by n array of m original observations in an
         n-dimensional space.
-    :param metric: string or function
+    metric: string or function
         The distance metric to use. The distance function can
         be 'braycurtis', 'canberra', 'chebyshev', 'cityblock',
         'correlation', 'cosine', 'dice', 'euclidean', 'hamming',
         'jaccard', 'kulsinski', 'mahalanobis', 'matching',
         'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean',
         'sokalmichener', 'sokalsneath', 'sqeuclidean', 'yule'.
-    :return: matrix of distance
+
+    Return
+    ------
+    matrix of distance
     """
     dist_temp = pdist(coordinate, metric)
     sdist = squareform(dist_temp)
@@ -39,6 +44,15 @@ def bundle_registration(cb_subj1, cb_subj2, pts=12):
     """
     Register two bundle from two subjects
     directly in the space of streamlines
+    Parameters
+    ----------
+    cb_subj1: first subject's bundle
+    cb_subj2: second subject's bundle
+    pts: each streamline is divided into sections
+
+    Return
+    ------
+    registration bundle
     """
     cb_subj1 = set_number_of_points(cb_subj1, pts)
     cb_subj2 = set_number_of_points(cb_subj2, pts)
@@ -51,6 +65,7 @@ def bundle_registration(cb_subj1, cb_subj2, pts=12):
 
 
 def _sort_streamlines(fasciculus_data):
+    """Store order of streamline is from left to right."""
     fasciculus_data_sort = nibas.ArraySequence()
     for i in range(len(fasciculus_data)):
         if fasciculus_data[i][0][0] < 0:
@@ -64,6 +79,14 @@ def clusters_terminus2surface_pm(cluters, geo_path):
     """
     Clusters mapping to surface
     Probabilistic map
+    Parameters
+    ----------
+    cluters: clusters data
+    geo_path: surface path
+
+    Return
+    ------
+    left and right hemisphere pm matrix: vertex x clusters
     """
     data0 = _sort_streamlines(cluters[0])
     stream_terminus_lh0 = np.array([s[0] for s in data0])
@@ -79,7 +102,7 @@ def clusters_terminus2surface_pm(cluters, geo_path):
         raise ImageFileError('This file format-{} is not supported at present.'.format(suffix))
     dist_lh0 = cdist(coords_lh, stream_terminus_lh0)
     vert_lh_label = np.array([float(np.array(dist_lh0[m] < 5).sum(axis=0)) for m in range(len(dist_lh0[:]))])
-    vert_lh_label[vert_lh_label > 0] = 1
+    # vert_lh_label[vert_lh_label > 0] = 1
 
     suffix = os.path.split(geo_path[1])[1].split('.')[-1]
     if suffix in ('white', 'inflated', 'pial'):
@@ -91,7 +114,7 @@ def clusters_terminus2surface_pm(cluters, geo_path):
         raise ImageFileError('This file format-{} is not supported at present.'.format(suffix))
     dist_rh0 = cdist(coords_rh, stream_terminus_rh0)
     vert_rh_label = np.array([float(np.array(dist_rh0[n] < 5).sum(axis=0)) for n in range(len(dist_rh0[:]))])
-    vert_rh_label[vert_rh_label > 0] = 1
+    # vert_rh_label[vert_rh_label > 0] = 1
 
     for i in range(len(cluters)):
         data = _sort_streamlines(cluters[i])
@@ -105,14 +128,11 @@ def clusters_terminus2surface_pm(cluters, geo_path):
         vert_rh_value = np.array([np.array(dist_rh[k] < 5).sum(axis=0) for k in range(len(dist_rh[:]))])
 
         if i != 0:
-            vert_lh_value[vert_lh_value > 0] = 1
-            vert_lh_label += vert_lh_value
+            vert_lh_label = np.vstack((vert_lh_label, vert_lh_value))
+            vert_rh_label = np.vstack((vert_rh_label, vert_rh_value))
 
-            vert_rh_value[vert_rh_value > 0] = 1
-            vert_rh_label += vert_rh_value
-
-    vert_lh_label /= len(cluters)
-    vert_rh_label /= len(cluters)
+    vert_lh_label /= vert_lh_label.sum(axis=0)
+    vert_rh_label /= vert_rh_label.sum(axis=0)
 
     return vert_lh_label, vert_rh_label
 
@@ -121,6 +141,14 @@ def clusters_terminus2surface_mpm(cluters, geo_path):
     """
     Clusters mapping to surface
     Maximum probabilistic map
+    Parameters
+    ----------
+    cluters: clusters data
+    geo_path: surface path
+
+    Return
+    ------
+    left and right hemisphere mpm : vertex x 1
     """
     data0 = _sort_streamlines(cluters[0])
     stream_terminus_lh0 = np.array([s[0] for s in data0])
@@ -174,3 +202,20 @@ def clusters_terminus2surface_mpm(cluters, geo_path):
         vert_rh_label_array = np.vstack((vert_rh_label_array, vert_rh_value))
 
     return vert_lh_label, vert_rh_label
+
+
+def clusters_terminus2surface_mpm_short(pm_matrix):
+    """
+    Clusters mapping to surface
+    Maximum probabilistic map
+    Parameters
+    ----------
+    pm_matrix: result of clusters_terminus2surface_pm
+
+    Return
+    ------
+    mpm matrix: vertex x 1
+    """
+    mpm = pm_matrix.argmax(axis=0)+1
+
+    return mpm
