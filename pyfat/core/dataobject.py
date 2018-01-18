@@ -116,8 +116,11 @@ class Fasciculus(object):
     def get_header(self):
         return self._header
 
-    def update_header(self):
-        pass
+    def update_header(self, dict_data):
+        if isinstance(dict_data, dict):
+            self._header = dict(self._header, **dict_data)
+        else:
+            raise ValueError("Data must be an object of Dictionary.")
 
     def get_data(self):
         return self._data
@@ -126,7 +129,7 @@ class Fasciculus(object):
         if isinstance(data, nibas.ArraySequence):
             self._data = data
         else:
-            raise ValueError("Data must be an object nibtck.ArraySequence.")
+            raise ValueError("Data must be an object of nibtck.ArraySequence.")
 
     def get_space(self):
         key = []
@@ -319,16 +322,16 @@ class Fasciculus(object):
 
         return fib_lh, fib_rh
 
-    def hemi_fib_merge(self, data):
+    def hemi_fib_merge(self, data1, data2):
         """self._data merge with data"""
         fib = nibas.ArraySequence()
-        for i in range(len(self._data)):
-            fib.append(self._data[i])
-        for j in range(len(data)):
-            flag = np.array([np.array(f == data[j]).all() for f in self._data]).any()
+        for i in range(len(data1)):
+            fib.append(data1[i])
+        for j in range(len(data2)):
+            flag = np.array([np.array(f == data2[j]).all() for f in data1]).any()
             if flag:
                 continue
-            fib.append(data[j])
+            fib.append(data2[j])
 
         return fib
 
