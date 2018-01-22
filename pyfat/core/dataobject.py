@@ -322,7 +322,7 @@ class Fasciculus(object):
 
         return fib_lh, fib_rh
 
-    def hemi_fib_merge(self, data1, data2):
+    def fib_merge(self, data1, data2):
         """self._data merge with data"""
         fib = nibas.ArraySequence()
         for i in range(len(data1)):
