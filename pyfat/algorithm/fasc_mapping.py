@@ -59,8 +59,11 @@ def _sort_streamlines(fasciculus_data):
     for i in range(len(fasciculus_data)):
         if fasciculus_data[i][0][0] < 0:
             fasciculus_data_sort.append(fasciculus_data[i])
-        else:
+        elif fasciculus_data[i][0][0] > 0 \
+            and fasciculus_data[i][-1][0] <0:
             fasciculus_data_sort.append(fasciculus_data[i][::-1])
+        else:
+            fasciculus_data_sort.append(fasciculus_data[i])
     return fasciculus_data_sort
 
 

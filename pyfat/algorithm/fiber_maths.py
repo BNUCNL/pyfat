@@ -14,6 +14,8 @@ from scipy.spatial.distance import pdist, squareform
 from dipy.tracking.streamline import set_number_of_points
 from dipy.align.streamlinear import StreamlineLinearRegistration
 
+from pyfat.core.dataobject import Fasciculus
+
 
 def coordinate_dist(coordinate, metric='euclidean'):
     """
@@ -219,3 +221,73 @@ def clusters_terminus2surface_mpm_short(pm_matrix):
     mpm = pm_matrix.argmax(axis=0)+1
 
     return mpm
+
+
+def create_registration_paths(prepath, pospath):
+    """
+    Create muti-bundle registration path.
+    Parameters
+    ----------
+    prepath: the first half of the path, which includes many subjects
+    pospath: the final part of the path, which is a particular file path of subject
+
+    Return
+    ------
+    paths_file: list
+    eg: ['prepath/subject1/pospath', 'prepath/subject2/pospath', ...]
+    """
+    files = os.listdir(prepath)
+    subjects = []
+    for name in files:
+        try:
+            int(name)
+            subjects.append(name)
+        except ValueError:
+            pass
+    # print subjects
+
+    paths_file = []
+    for subject in subjects:
+        paths_file.append(os.path.join(prepath, subject, pospath))
+
+    return paths_file
+
+
+def muti_bundle_registration(paths_file, pts=12):
+    """
+    muti-bundle registration and consolidation
+    Parameters
+    ----------
+    paths_file: list; muti_bundle file path
+    pts: each streamline is divided into sections
+
+    Return
+    ------
+    new header: include id of each streamline that comes from different subjects
+    registration and consolidation bundle
+    """
+    fas = Fasciculus(paths_file[0])
+    # print fas.get_header()
+    bundle_header = {'fasciculus_id': None}
+    sub1 = fas.get_data()
+    bundle_header['fasciculus_id'] = len(sub1) * [int(paths_file[0].split('/')[9])]
+    sub2 = Fasciculus(paths_file[1]).get_data()
+    subj2_aligned = bundle_registration(sub1, sub2, pts=pts)
+    bundle = fas.fib_merge(sub1, subj2_aligned)
+    bundle_header['fasciculus_id'] += (len(bundle) - len(sub1)) * [int(paths_file[1].split('/')[9])]
+    # print bundle_header
+    # print len(bundle)
+    for index in range(len(paths_file))[2:]:
+        # print paths_file[index]
+        sub = Fasciculus(paths_file[index]).get_data()
+        sub_aligned = bundle_registration(sub1, sub, pts=pts)
+        lenth = len(bundle)
+        bundle = fas.fib_merge(bundle, sub_aligned)
+        bundle_header['fasciculus_id'] += (len(bundle) - lenth) * [int(paths_file[index].split('/')[9])]
+
+    fas.update_header(bundle_header)
+    fas.set_data(nibas.ArraySequence(bundle))
+    new_header = fas.get_header()
+    new_bundle = fas.get_data()
+
+    return new_header, new_bundle

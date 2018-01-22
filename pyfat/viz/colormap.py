@@ -311,14 +311,19 @@ def create_colormap(v, name='plasma', auto=True):
     return rgb
 
 
-def create_random_colormap(v, rand_range=(0, 255)):
+def create_random_colormap(v, rand_range=(0, 255), dim=3, alpha=255):
     """
     Create random colormap.
     """
-    rgb = np.zeros([v, 3])
-    for i in range(v):
-        rgb[i, 0] = np.random.randint(rand_range[0], rand_range[1])
-        rgb[i, 1] = np.random.randint(rand_range[0], rand_range[1])
-        rgb[i, 2] = np.random.randint(rand_range[0], rand_range[1])
+    rgb = np.zeros([v, dim])
+    if dim == 3:
+        for i in range(v):
+            for j in range(dim):
+                rgb[i, j] = np.random.randint(rand_range[0], rand_range[1])
+    elif dim == 4:
+        for i in range(v):
+            for j in range(dim-1):
+                rgb[i, j] = np.random.randint(rand_range[0], rand_range[1])
+            rgb[i, 3] = alpha
 
     return rgb
