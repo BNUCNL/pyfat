@@ -354,12 +354,17 @@ class Fasciculus(object):
             x_stemp = np.array([l, l_ahead])
             x_stemp_index = x_stemp.prod(axis=0)
             index0 = np.argwhere(x_stemp_index <= 0)
-            index_term = np.argmin((abs(streamlines[i][index0[0][0]][0]),
-                                    abs(streamlines[i][index0[0][0] + 1][0])))
-            index = index0[0][0] + index_term
-
-            fib_lh.append(streamlines[i][:index + 1])
-            fib_rh.append(streamlines[i][index:])
+            if len(index0) != 0:
+                index_term = np.argmin((abs(streamlines[i][index0[0][0]][0]),
+                                        abs(streamlines[i][index0[0][0] + 1][0])))
+                index = index0[0][0] + index_term
+                fib_lh.append(streamlines[i][:index + 1])
+                fib_rh.append(streamlines[i][index:])
+            else:
+                if streamlines[i][0][0] <= 0:
+                    fib_lh.append(streamlines[i])
+                else:
+                    fib_rh.append(streamlines[i])
 
         return fib_lh, fib_rh
 
