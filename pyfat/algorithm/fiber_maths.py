@@ -287,7 +287,5 @@ def muti_bundle_registration(paths_file, pts=12):
 
     fas.update_header(bundle_header)
     fas.set_data(nibas.ArraySequence(bundle))
-    new_header = fas.get_header()
-    new_bundle = fas.get_data()
 
-    return new_header, new_bundle
+    return fas
