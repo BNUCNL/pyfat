@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import division
+import gc
 import os
 import numpy as np
 import nibabel as nib
@@ -113,6 +114,9 @@ class Fasciculus(object):
         else:
             self._lengths_max = lengths_max
 
+        if 'fasciculus_id' in self._header.keys():
+            self.fasciculus_id2int()
+
     def get_header(self):
         return self._header
 
@@ -166,6 +170,24 @@ class Fasciculus(object):
 
     def get_labels_data(self):
         return self._labels_data
+
+    def fasciculus_id2int(self):
+        int_id = []
+        if 'fasciculus_id' in self._header.keys():
+            str = self._header['fasciculus_id']
+            str = str.replace('[', '')
+            str = str.replace(']', '')
+            str = str.split(',')
+            for _id in str:
+                try:
+                    int_id.append(int(_id))
+                except ValueError:
+                    pass
+            self._header['fasciculus_id'] = int_id
+            del int_id
+            gc.collect()
+        else:
+            pass
 
     def set_lengths_min(self, min_value):
         min_value = float(min_value)
