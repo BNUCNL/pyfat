@@ -7,6 +7,7 @@ import nibabel as nib
 
 from dipy.tracking import streamline, utils
 import nibabel.streamlines.array_sequence as nibas
+import nibabel.streamlines.tractogram as nibtcg
 import nibabel.streamlines.tck as nibtck
 import numpy.linalg as npl
 from nibabel.affines import apply_affine
@@ -105,3 +106,13 @@ class Tract(object):
         rois_streamlines = list(rois_selection)
 
         return rois_streamlines
+
+    def save_streamline2tck(self, file_path):
+        """Save to a tck file"""
+        tractogram = nibtcg.Tractogram(streamlines=self.streamline, data_per_streamline=self.streamline_img.data_per_streamline,
+                                       data_per_point=self.streamline_img.data_per_point, affine_to_rasmm=self.streamline_img._affine_to_rasmm)
+        datdat = nibtck.TckFile(tractogram=tractogram, header=self.streamline_img.header)
+        datdat.save(file_path)
+
+    def save_scalar2nifti(self):
+        pass
