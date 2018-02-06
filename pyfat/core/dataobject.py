@@ -117,6 +117,13 @@ class Fasciculus(object):
         if 'fasciculus_id' in self._header.keys():
             self.fasciculus_id2int()
 
+    def __setattr__(self, key, value):
+        object.__setattr__(self, key, value)
+
+    def __getattr__(self, item):
+        if item not in self.__dict__:
+            return None
+
     def get_header(self):
         return self._header
 

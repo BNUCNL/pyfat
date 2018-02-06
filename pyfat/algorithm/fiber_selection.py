@@ -51,7 +51,7 @@ def select_by_vol_rois(streamlines, rois, include, mode=None, affine=None, tol=N
     >>>selection = select_by_vol_rois(streamlines, [mask1, mask2], [True, False], mode="both_end", tol=1.0)
     >>>selection = list(selection)
     """
-    rois_selection = streamline.select_by_rois(streamline=streamline, rois=rois,
+    rois_selection = streamline.select_by_rois(streamline=streamlines, rois=rois,
                                                include=include, mode=mode, affine=affine, tol=tol)
     rois_streamlines = list(rois_selection)
 
