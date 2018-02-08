@@ -4,6 +4,7 @@
 from __future__ import division
 import gc
 import os
+import sys
 import numpy as np
 import nibabel as nib
 from nibabel.spatialimages import ImageFileError
@@ -407,7 +408,113 @@ class Fasciculus(object):
 
 class VolumeImage(object):
     """Base dataset for Volume."""
-    pass
+    def __init__(self, source, header=None):
+        """
+        Create a dataset from an NiftiImage which has following
+        atributes:
+
+        Parameters
+        ----------
+        source : Nifti file path or 3D/4D numpy array
+            Nifti dataset, specified either as a filename (single file 3D/4D
+            image) or a 3D/4D numpy array. When source is a numpy array,
+            parameter header is required.
+        header : nifti1 header structure
+            Nifti header structure.
+
+        Returns
+        -------
+        VolumeDataset
+        """
+        if isinstance(source, np.ndarray):
+            self._data = np.rot90(source)
+            if not isinstance(header, nib.nifti1.Nifti1Header):
+                raise ValueError("Parameter header must be specified!")
+            elif header.get_data_shape() == source.shape:
+                self._header = header
+                self._img = None
+            else:
+                raise ValueError("Data dimension does not match.")
+        else:
+            self._img = nib.load(source)
+            self._header = self._img.get_header()
+
+        # bool status for the item
+        if len(self.get_data_shape()) == 3:
+            self._4d = False
+        else:
+            self._4d = True
+
+    def get_data_shape(self):
+        """Get shape of data."""
+        return self._header.get_data_shape()
+
+    def is_4d(self):
+        """If the data is including several time points, return True."""
+        return self._4d
+
+    def save2nifti(self, file_path):
+        """Save to a nifti file."""
+        # Define nifti1 datatype codes
+        NIFTI_TYPE_UINT8 = 2  # unsigned char
+        NIFTI_TYPE_INT16 = 4  # signed short
+        NIFTI_TYPE_INT32 = 8  # signed int.
+        NIFTI_TYPE_FLOAT32 = 16  # 32 bit float.
+        NIFTI_TYPE_COMPLEX64 = 32  # 64 bit complex = 2 32 bit floats
+        NIFTI_TYPE_FLOAT64 = 64  # 64 bit float = double.
+        NIFTI_TYPE_RGB24 = 128  # 3 8 bit bytes.
+        NIFTI_TYPE_INT8 = 256  # signed char.
+        NIFTI_TYPE_UINT16 = 512  # unsigned short.
+        NIFTI_TYPE_UINT32 = 768  # unsigned int.
+        NIFTI_TYPE_INT64 = 1024  # signed long long.
+        NIFTI_TYPE_UINT64 = 1280  # unsigned long long.
+        NIFTI_TYPE_FLOAT128 = 1536  # 128 bit float = long double.
+        NIFTI_TYPE_COMPLEX128 = 1792  # 128 bit complex = 2 64 bit floats.
+        NIFTI_TYPE_COMPLEX256 = 2048  # 256 bit complex = 2 128 bit floats
+        NIFTI_TYPE_RGBA32 = 2304  # 4 8 bit bytes.
+
+        # Detect the data type of the input data.
+        data_type = {
+            np.uint8: NIFTI_TYPE_UINT8,
+            np.uint16: NIFTI_TYPE_UINT16,
+            np.uint32: NIFTI_TYPE_UINT32,
+            np.float32: NIFTI_TYPE_FLOAT32,
+            np.int16: NIFTI_TYPE_INT16,
+            np.int32: NIFTI_TYPE_INT32,
+            np.int8: NIFTI_TYPE_INT8
+        }
+        if sys.maxint > 2 ** 32:  # The platform is 64 bit
+            data_type[np.float128] = NIFTI_TYPE_FLOAT128
+            data_type[np.float64] = NIFTI_TYPE_FLOAT64
+            data_type[np.int64] = NIFTI_TYPE_INT64
+            data_type[np.uint64] = NIFTI_TYPE_UINT64
+            data_type[np.complex64] = NIFTI_TYPE_COMPLEX64
+            data_type[np.complex128] = NIFTI_TYPE_COMPLEX128
+            data_type[np.complex256] = NIFTI_TYPE_COMPLEX256
+
+        data = np.rot90(self._data, 3)
+        if data_type.has_key(data.dtype.type):
+            self._header['datatype'] = data_type[data.dtype.type]
+        self._header['cal_max'] = data.max()
+        self._header['cal_min'] = 0
+        image = nib.nifti1.Nifti1Image(data, None, self._header)
+        nib.nifti1.save(image, file_path)
+
+    def get_header(self):
+        """Get the header of the data.."""
+        return self._header
+
+    def get_raw_data(self):
+        """Return the raw data."""
+        if self._img and self.is_4d():
+            temp = self._img.get_data(caching='unchanged')
+            temp = np.rot90(temp)
+            for tp in self._loaded_time_list:
+                temp[..., tp] = self._data[..., tp]
+        else:
+            temp = self._data.copy()
+
+        return np.rot90(temp, 3)
 
 
 class SurfaceGeometry(object):
