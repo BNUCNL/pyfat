@@ -15,7 +15,7 @@ import numpy as np
 from dipy.viz import actor, window, ui
 
 
-def fiber_simple_3d_show_advanced(img, streamlines, colors=None, linewidth=1, s='png', world_coords=True, slicer_opacity=0.6):
+def fiber_simple_3d_show_advanced(img, streamlines, colors=None, linewidth=1, s='png', imgcolor=False):
 
     streamlines = streamlines
     data = img.get_data()
@@ -47,10 +47,16 @@ def fiber_simple_3d_show_advanced(img, streamlines, colors=None, linewidth=1, s=
     ren = window.Renderer()
     stream_actor = actor.line(streamlines, colors=colors, linewidth=linewidth)
 
-    if not world_coords:
-        image_actor_z = actor.slicer(data, affine=np.eye(4))
+    """img colormap"""
+    if imgcolor:
+        lut = actor.colormap_lookup_table(scale_range=(0, 1), hue_range=(0, 1.),
+                                          saturation_range=(0., 1.), value_range=(0., 1.))
     else:
-        image_actor_z = actor.slicer(data, affine)
+        lut = None
+    if not world_coords:
+        image_actor_z = actor.slicer(data, affine=np.eye(4), lookup_colormap=lut)
+    else:
+        image_actor_z = actor.slicer(data, affine, lookup_colormap=lut)
 
     """
     We can also change also the opacity of the slicer.
