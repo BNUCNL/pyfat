@@ -48,9 +48,7 @@ class MouseInteractorStylePP(CustomInteractorStyle):
             screen_pos = self.GetInteractor().GetEventPosition()
             self.picker.Pick(screen_pos[0], screen_pos[1], 0, self.renderer)
             actor_new = self.picker.GetActor()
-            print actor_new
             world_pos_new = self.picker.GetPickPosition()
-            print world_pos_new
 
             # Calculate the xy movement
             dx = world_pos_new[0] - self.world_pos[0]
