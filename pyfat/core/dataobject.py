@@ -87,7 +87,7 @@ class Fasciculus(object):
             self._data = self._img.streamlines
             self._data_per_streamline = self._img.tractogram.data_per_streamline
             self._data_per_point = self._img.tractogram.data_per_point
-            self._affine_to_rasmm = self._header['voxel_to_rasmm']
+            self._affine_to_rasmm = self._img.tractogram.affine_to_rasmm
 
         # tractography algorithm
         self._algorithm = self._header['method']
