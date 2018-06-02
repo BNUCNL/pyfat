@@ -223,6 +223,62 @@ def terminus2surface_density_map(streamlines, geo_path):
     return vert_lh_value, vert_rh_value
 
 
+def terminus2hemi_surface_density_map(streamlines, geo_path, hemi):
+    """
+    Streamline endpoints areas mapping to hemisphere surface
+    streamlines > 1000
+    Parameters
+    ----------
+    streamlines: streamline data
+    geo_path: surface data path
+
+    Return
+    ------
+    endpoints areas map on surface
+    """
+    streamlines = _sort_streamlines(streamlines)
+    bundles = QuickBundles(streamlines, 10, 12)
+    # bundles.remove_small_clusters(10)
+    clusters = bundles.clusters()
+    data_clusters = []
+    for key in clusters.keys():
+        data_clusters.append(streamlines[clusters[key]['indices']])
+
+    data0 = data_clusters[0]
+    stream_terminus_lh0 = np.array([s[0] for s in data0])
+    stream_terminus_rh0 = np.array([s[-1] for s in data0])
+
+    suffix = os.path.split(geo_path)[1].split('.')[-1]
+    if suffix in ('white', 'inflated', 'pial'):
+        coords, faces = nib.freesurfer.read_geometry(geo_path)
+    elif suffix == 'gii':
+        gii_data = nib.load(geo_path).darrays
+        coords, faces = gii_data[0].data, gii_data[1].data
+    else:
+        raise ImageFileError('This file format-{} is not supported at present.'.format(suffix))
+    if hemi == 'lh':
+        dist_lh0 = cdist(coords, stream_terminus_lh0)
+        vert_value = np.array([float(np.array(dist_lh0[m] < 5).sum(axis=0)) for m in range(len(dist_lh0[:]))])
+    else:
+        dist_rh0 = cdist(coords, stream_terminus_rh0)
+        vert_value = np.array([float(np.array(dist_rh0[n] < 5).sum(axis=0)) for n in range(len(dist_rh0[:]))])
+
+    for i in range(len(data_clusters)):
+        data = data_clusters[i]
+        if hemi == 'lh':
+            stream_terminus = np.array([s[0] for s in data])
+        else:
+            stream_terminus = np.array([s[-1] for s in data])
+
+        dist = cdist(coords, stream_terminus)
+        vert_value_i = np.array([np.array(dist[j] < 5).sum(axis=0) for j in range(len(dist[:]))])
+
+        if i != 0:
+            vert_value += vert_value_i
+
+    return vert_value
+
+
 def terminus2volume_nearest_vox(streamlines, volume_path):
     """
     Points mapping to volume
