@@ -330,8 +330,8 @@ def computeFibCallback(obj, event):
         ren.RemoveActor(stream_actor)
         ren.RemoveActor(stream_init_actor)
         # random = np.random.RandomState()
-        color = np.random.uniform(0., 1., size=3)
-        stream_actor = actor.line(new_f, color)
+        # color = np.random.uniform(0., 1., size=3)
+        stream_actor = actor.line(new_f, (1., 1., 1.))
         ren.add(stream_actor)
     except:
         pass
@@ -407,7 +407,7 @@ def modify_left_button_callback(i_ren, obj, button):
         new_f = _computeFib(streamlines, sphereWidget)
         save_tck(new_f, header=fib.header, data_per_streamline=fib.tractogram.data_per_streamline,
                  data_per_point=fib.tractogram.data_per_point, affine_to_rasmm=fib.tractogram.affine_to_rasmm,
-                 out_path=os.path.join(os.getcwd(), 'result', '%s.tck') % text.text)
+                 out_path=os.path.join(file_select_menu.current_directory, '%s.tck') % text.text)
     if button.current_icon_id == 1:
         pass
 
@@ -554,6 +554,7 @@ file_select_menu = ui.FileSelectMenu2D(size=(300, 500),
                                        directory_path=os.getcwd(),
                                        parent=None)
 print file_select_menu.text_item_list
+print file_select_menu.current_directory
 
 
 def left_button_clicked(i_ren, obj, file_select_text):
