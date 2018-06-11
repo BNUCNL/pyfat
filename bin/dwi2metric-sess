@@ -1,0 +1,61 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import os
+import argparse
+import subprocess
+
+
+def main():
+    """Main entrance for batch processing of dwi2metric."""
+    parser = argparse.ArgumentParser(description='dwi2metric for batch processing')
+    parser.add_argument('-sf',
+                        dest='sessid_file',
+                        metavar='sessid file',
+                        required=True,
+                        # action='store_true',
+                        help='a session ID file containing all subjects')
+    parser.add_argument('-subpath',
+                        dest='sub_path',
+                        metavar='subjects path',
+                        required=True,
+                        type=str,
+                        help='a session path containing all subjects')
+    parser.add_argument('-dest',
+                        dest='dest',
+                        metavar='destination directory',
+                        required=False,
+                        type=str,
+                        help='specify a directory where output file should be')
+    parser.add_argument('-cmd',
+                        dest='pipeline',
+                        metavar='commands to execute',
+                        required=True,
+                        type=str,
+                        help='specify commands to execute')
+    parser.add_argument('-n',
+                        dest='n',
+                        metavar='numbers of subjects_id in pipeline.',
+                        required=True,
+                        type=int,
+                        help='specify numbers of subjects_id in pipeline.')
+
+    args = parser.parse_args()
+    if not args.sub_path:
+        raise RuntimeError('Please specify subjects path through "-subpath".')
+
+    with open(args.sessid_file, 'r') as f:
+        sessid = f.readlines()
+        sessid = [_.strip() for _ in sessid]
+
+    if not args.dest:
+        args.dest = os.path.dirname(__file__)
+
+    for sess in sessid:
+        pre_subjects_path = os.path.join(args.sub_path, sess)
+        print tuple([pre_subjects_path]*args.n)
+        print args.pipeline
+        subprocess.call(args.pipeline % tuple([pre_subjects_path]*args.n), shell=True)
+
+if __name__ == '__main__':
+    main()
