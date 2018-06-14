@@ -55,6 +55,13 @@ def main():
                         required=False,
                         type=str,
                         help='remove commands from pipeline: commands or commands file')
+    parser.add_argument('-cmd_view',
+                        dest='cmd_view',
+                        metavar='display commands in pipeline',
+                        required=False,
+                        type=bool,
+                        default=False,
+                        help='display commands in pipeline, default False')
 
     args = parser.parse_args()
 
@@ -72,6 +79,9 @@ def main():
         pip_id = f_p.readlines()
         pip_id = [_.strip() for _ in pip_id]
 
+    if args.cmd_view:
+        print pip_id
+
     if args.add_cmd:
         pip_id.insert(int(args.add_cmd[1]), args.add_cmd[0])
 
@@ -83,7 +93,7 @@ def main():
             for sess in sessid:
                 pre_subjects_path = os.path.join(args.sub_path, sess)
                 subprocess.call(cmds.format(subjects_path_id=pre_subjects_path, destination_path=args.dest), shell=True)
-                
+
     if args.exe_ord == 'DFS':
         for sess in sessid:
             for cmds in pip_id:
