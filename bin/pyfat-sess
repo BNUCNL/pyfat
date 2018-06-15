@@ -116,15 +116,13 @@ def main():
 
     args = parser.parse_args()
 
-    if not args.sesspar_path and not args.sesspar_file:
-        args.sesspar_path = os.getcwd()
-
     if args.sesspar_path and args.sesspar_file:
         raise ValueError("-sesspar and -sesspar_file do not exist at same time!")
-
-    if args.sesspar_file:
+    elif args.sesspar_file and not args.sesspar_path:
         with open(args.sesspar_file, 'r') as sesspar_f:
             args.sesspar_path = sesspar_f.readlines()[0].strip()
+    elif not args.sesspar_path and not args.sesspar_file:
+        args.sesspar_path = os.getcwd()
 
     if args.sessid_file and args.sess_id:
         with open(args.sessid_file, 'r') as f:
@@ -141,9 +139,20 @@ def main():
     else:
         raise ValueError("must specify subject ID or ID file.")
 
-    # if not args.dest:
-    #     args.dest = os.getcwd()
-    #
+    if args.run_file and args.run_id:
+        with open(args.run_file, 'r') as run_f:
+            runid = run_f.readlines()
+            runid = [_.strip() for _ in runid]
+        runids = args.run_id.split(' ')
+        runid = list(set(runid.extend(runids)))
+    elif args.run_file and not args.run_id:
+        with open(args.run_file, 'r') as run_f:
+            runid = run_f.readlines()
+            runid = [_.strip() for _ in runid]
+    if not args.run_file and args.run_id:
+        runid = args.run_id.split(' ')
+
+
     # with open(args.pipeline, 'rw') as f_p:
     #     pip_id = f_p.readlines()
     #     pip_id = [_.strip() for _ in pip_id]
