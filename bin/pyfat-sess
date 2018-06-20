@@ -10,85 +10,223 @@ def main():
     """Main entrance for batch processing of pyfat."""
     parser = argparse.ArgumentParser(description='pyfat for batch processing',
                                      prog='pyfat')
-    parser.add_argument('-sf',
+    parser.add_argument('-sessid_file',
                         dest='sessid_file',
                         metavar='sessid file',
-                        required=True,
+                        required=False,
+                        type=str,
                         help='a session ID file containing all subjects')
-    parser.add_argument('-subpath',
-                        dest='sub_path',
+
+    parser.add_argument('-sessid',
+                        dest='sess_id',
+                        metavar='sess id',
+                        required=False,
+                        type=str,
+                        help='some subjects ID')
+
+    parser.add_argument('-sesspar',
+                        dest='sesspar_path',
                         metavar='subjects path',
                         required=False,
                         type=str,
                         help='a session path containing all subjects')
-    parser.add_argument('-dest',
-                        dest='dest',
-                        metavar='destination directory',
+
+    parser.add_argument('-sesspar_file',
+                        dest='sesspar_file',
+                        metavar='sesspar file',
                         required=False,
                         type=str,
-                        help='specify a directory where output file should be')
-    parser.add_argument('-pipeline',
-                        dest='pipeline',
+                        help='some path containing different subjects')
+
+    parser.add_argument('-run_file',
+                        dest='run_file',
+                        metavar='run file',
+                        required=False,
+                        type=str,
+                        help='a file containing run of subject')
+
+    parser.add_argument('-runid',
+                        dest='run_id',
+                        metavar='run id',
+                        required=False,
+                        type=str,
+                        help='some run ID of subject')
+
+    parser.add_argument('-pipeline_name',
+                        dest='pipeline_name',
                         metavar='commands of pipeline to execute',
-                        required=True,
+                        required=False,
+                        type=str,
+                        help='specify commands pipeline to execute')
+
+    parser.add_argument('-sole',
+                        dest='sole_cmd',
+                        metavar='sole cmd to execute',
+                        required=False,
                         type=str,
                         help='specify commands to execute')
-    parser.add_argument('-exe_ord',
+
+    parser.add_argument('-exe_order',
                         dest='exe_ord',
                         metavar='order of commands execution: BFS Breadth First Search; DFS Depth First Search',
                         required=False,
                         type=str,
-                        choices=['BFS', 'DFS'],
-                        default='BFS',
+                        choices=['sess', 'cmd'],
+                        default='sess',
                         help='order of commands execution: first subjects or first commands')
-    parser.add_argument('-add_cmd',
-                        nargs='+',
-                        dest='add_cmd',
-                        metavar='add commands to pipeline',
+
+    parser.add_argument('-append',
+                        dest='append_cmd',
+                        metavar='append commands to pipeline',
                         required=False,
                         type=str,
-                        help='add commands to pipeline: commands or commands file')
-    parser.add_argument('-remove_cmd',
-                        # nargs='+',
-                        dest='remove_cmd',
+                        help='append commands to pipeline')
+
+    parser.add_argument('-insert',
+                        dest='insert_cmd',
+                        nargs='+',
+                        metavar='insert commands to pipeline',
+                        required=False,
+                        type=str,
+                        help='insert commands to pipeline')
+
+    parser.add_argument('-remove',
+                        dest='cmd_id',
                         metavar='remove commands from pipeline',
                         required=False,
+                        type=int,
+                        help='remove commands from pipeline, input index of commands')
+
+    parser.add_argument('-view',
+                        dest='cmd_view',
+                        metavar='display commands in pipeline',
+                        required=False,
+                        type=bool,
+                        default=False,
+                        help='display commands in pipeline, default=False')
+
+    parser.add_argument('-mode',
+                        dest='mode',
+                        metavar='state of pipeline',
+                        required=False,
                         type=str,
-                        help='remove commands from pipeline: commands or commands file')
+                        choices=['edit', 'exe'],
+                        default='exe',
+                        help='specify state of pipeline, default=False')
 
     args = parser.parse_args()
 
-    if not args.sub_path:
-        args.sub_path = os.getcwd()
+    if args.mode == 'exe':
+        if args.sesspar_path and args.sesspar_file:
+            raise ValueError("-sesspar and -sesspar_file do not exist at same time!")
+        elif args.sesspar_file and not args.sesspar_path:
+            with open(args.sesspar_file, 'r') as sesspar_f:
+                args.sesspar_path = sesspar_f.readlines()[0].strip()
+        elif not args.sesspar_path and not args.sesspar_file:
+            args.sesspar_path = os.getcwd()
 
-    with open(args.sessid_file, 'r') as f:
-        sessid = f.readlines()
-        sessid = [_.strip() for _ in sessid]
+        if args.sessid_file and args.sess_id:
+            with open(args.sessid_file, 'r') as f:
+                sessid = f.readlines()
+                sessid = [_.strip() for _ in sessid]
+            sessids = args.sess_id.split(' ')
+            sessid = list(set(sessid.extend(sessids)))
+        elif args.sessid_file and not args.sess_id:
+            with open(args.sessid_file, 'r') as f:
+                sessid = f.readlines()
+                sessid = [_.strip() for _ in sessid]
+        elif args.sess_id and not args.sessid_file:
+            sessid = args.sess_id.split(' ')
+        else:
+            raise ValueError("must specify subject ID or ID file.")
 
-    if not args.dest:
-        args.dest = os.getcwd()
+        if args.run_file and args.run_id:
+            with open(args.run_file, 'r') as run_f:
+                runid = run_f.readlines()
+                runid = [_.strip() for _ in runid]
+            runids = args.run_id.split(' ')
+            runid = list(set(runid.extend(runids)))
+        elif args.run_file and not args.run_id:
+            with open(args.run_file, 'r') as run_f:
+                runid = run_f.readlines()
+                runid = [_.strip() for _ in runid]
+        if not args.run_file and args.run_id:
+            runid = args.run_id.split(' ')
 
-    with open(args.pipeline, 'rw') as f_p:
-        pip_id = f_p.readlines()
-        pip_id = [_.strip() for _ in pip_id]
+        if args.pipeline_name and args.sole_cmd:
+            raise ValueError("-pipeline_name and -sole do not exist at same time!")
+        elif args.pipeline_name and not args.sole_cmd:
+            with open(args.pipeline, 'r+') as f_p:
+                pip_id = f_p.readlines()
+                pip_id = [_.strip() for _ in pip_id]
+                if args.append_cmd:
+                    pip_id.append(args.append_cmd)
+                if args.insert_cmd:
+                    pip_id.insert(int(args.insert_cmd[0]), args.insert_cmd[1])
+                if args.cmd_id:
+                    del pip_id[args.cmd_id]
+                f_p.seek(0)
+                f_p.truncate()
+                # f_p.writelines(pip_id)
+                f_p.write('\n'.join(pip_id))
+        elif args.sole_cmd and not args.pipeline_name:
+            pip_id = [args.sole_cmd]
+        else:
+            raise ValueError("must specify a pipeline or sole cmd!")
 
-    if args.add_cmd:
-        pip_id.insert(int(args.add_cmd[1]), args.add_cmd[0])
+        if args.cmd_view:
+            for p in pip_id:
+                print p
 
-    if args.remove_cmd:
-        pip_id.remove(args.remove_cmd)
+        if len(runid) != 0:
+            for run_id in runid:
+                if args.exe_ord == 'sess':
+                    for cmds in pip_id:
+                        for sess in sessid:
+                            pre_subjects_path = os.path.join(args.sub_path, sess)
+                            subprocess.call(cmds.format(subjects_path_id=pre_subjects_path, run_id=run_id), shell=True)
+                if args.exe_ord == 'cmd':
+                    for sess in sessid:
+                        for cmds in pip_id:
+                            pre_subjects_path = os.path.join(args.sub_path, sess)
+                            subprocess.call(cmds.format(subjects_path_id=pre_subjects_path, run_id=run_id), shell=True)
+        else:
+            if args.exe_ord == 'sess':
+                for cmds in pip_id:
+                    for sess in sessid:
+                        pre_subjects_path = os.path.join(args.sub_path, sess)
+                        subprocess.call(cmds.format(subjects_path_id=pre_subjects_path), shell=True)
+            if args.exe_ord == 'cmd':
+                for sess in sessid:
+                    for cmds in pip_id:
+                        pre_subjects_path = os.path.join(args.sub_path, sess)
+                        subprocess.call(cmds.format(subjects_path_id=pre_subjects_path), shell=True)
 
-    if args.exe_ord == 'BFS':
-        for cmds in pip_id:
-            for sess in sessid:
-                pre_subjects_path = os.path.join(args.sub_path, sess)
-                subprocess.call(cmds.format(subjects_path_id=pre_subjects_path, destination_path=args.dest), shell=True)
-                
-    if args.exe_ord == 'DFS':
-        for sess in sessid:
-            for cmds in pip_id:
-                pre_subjects_path = os.path.join(args.sub_path, sess)
-                subprocess.call(cmds.format(subjects_path_id=pre_subjects_path, destination_path=args.dest), shell=True)
+    if args.mode == 'edit':
+        if args.pipeline_name and args.sole_cmd:
+            raise ValueError("-pipeline_name and -sole do not exist at same time!")
+        elif args.pipeline_name and not args.sole_cmd:
+            with open(args.pipeline, 'r+') as f_p:
+                pip_id = f_p.readlines()
+                pip_id = [_.strip() for _ in pip_id]
+                if args.append_cmd:
+                    pip_id.append(args.append_cmd)
+                if args.insert_cmd:
+                    pip_id.insert(int(args.insert_cmd[0]), args.insert_cmd[1])
+                if args.cmd_id:
+                    del pip_id[args.cmd_id]
+                f_p.seek(0)
+                f_p.truncate()
+                # f_p.writelines(pip_id)
+                f_p.write('\n'.join(pip_id))
+        elif args.sole_cmd and not args.pipeline_name:
+            pip_id = [args.sole_cmd]
+        else:
+            raise ValueError("must specify a pipeline or sole cmd!")
+
+        if args.cmd_view:
+            for p in pip_id:
+                print p
 
 
 if __name__ == '__main__':
