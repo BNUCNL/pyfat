@@ -54,8 +54,9 @@ class MouseInteractorStylePP(CustomInteractorStyle):
             screen_pos = self.GetInteractor().GetEventPosition()
             self.picker.Pick(screen_pos[0], screen_pos[1], 0, self.renderer)
             actor_new = self.picker.GetActor()
-            # print actor_new
+            print actor_new
             world_pos_new = self.picker.GetPickPosition()
+            print world_pos_new
 
             # Calculate the xy movement
             dx = world_pos_new[0] - self.world_pos[0]
@@ -85,32 +86,64 @@ class MouseInteractorStylePP(CustomInteractorStyle):
         self.AddObserver('RightButtonReleaseEvent', self.OnRightButtonUp)
         self.AddObserver('MouseMoveEvent', self.OnMouseMove)
 
-fib_file = '/home/brain/workingdir/data/dwi/hcp/preprocessed/' \
-           'response_dhollander/100206/Diffusion/SD/1M_20_01_20dynamic250_SD_Stream_occipital5.tck'
 # fib_file = '/home/brain/workingdir/data/dwi/hcp/preprocessed/' \
-#            'response_dhollander/100206/Diffusion/SD/1M_20_01_20dynamic250_SD_Stream_single.tck'
+#            'response_dhollander/100206/Diffusion/SD/1M_20_01_20dynamic250_SD_Stream_occipital5.tck'
+# fib_file = '/home/brain/workingdir/data/dwi/hcp/preprocessed/' \
+#            'response_dhollander/100206/Diffusion/SD/100206_FP.tck'
 vol_file = '/home/brain/workingdir/data/dwi/hcp/preprocessed/' \
-           'response_dhollander/100206/Structure/T1w_acpc_dc_restore_brain1.25.nii.gz'
+           'response_dhollander/100408/Structure/T1w_acpc_dc_restore_brain1.25.nii.gz'
 roi_file = '/home/brain/workingdir/data/dwi/hcp/preprocessed/' \
-           'response_dhollander/100206/ROI/100206_CGC_roi1_L.nii.gz'
+           'response_dhollander/100408/ROI/100408_L_Occipital.nii.gz'
 roi_file1 = '/home/brain/workingdir/data/dwi/hcp/preprocessed/' \
-            'response_dhollander/100206/ROI/100206_CGC_roi2_L.nii.gz'
+            'response_dhollander/100408/ROI/100408_R_Occipital.nii.gz'
+roi_vis = '/home/brain/workingdir/data/dwi/hcp/preprocessed/' \
+          'response_dhollander/100408/Structure/Native_cytoMPM_thr25_vis.nii.gz'
+fib_file = '/home/brain/workingdir/data/dwi/hcp/preprocessed/' \
+           'response_dhollander/100408/result/result20vs45/cc_20fib_lr1.5_new_SD_Stream_hierarchical_single_cc.tck'
 
 fib = nib.streamlines.tck.TckFile.load(fib_file)
 streamlines = fib.streamlines
+from pyfat.algorithm.fiber_selection import select_by_vol_roi
 
-# create a rendering renderer
-ren = window.Renderer()
-stream_actor = actor.line(streamlines)
+print len(streamlines)
+# # create a rendering renderer
+# ren = window.Renderer()
+# stream_actor = actor.line(streamlines)
 
 roi = nib.load(roi_file)
 roi_data = roi.get_data()
 roi1 = nib.load(roi_file1)
 roi1_data = roi1.get_data()
-ROI_actor = actor.contour_from_roi(roi_data, affine=roi.affine, color=(1., 1., 0.), opacity=0.5)
-ROI_actor1 = actor.contour_from_roi(roi1_data, affine=roi1.affine, color=(1., 1., 0.), opacity=0.5)
+ROI_actor = actor.contour_from_roi(roi_data, affine=roi.affine, color=(1., 1., 0.), opacity=0.8)
+ROI_actor1 = actor.contour_from_roi(roi1_data, affine=roi1.affine, color=(1., 1., 0.), opacity=0.8)
 
+####################################################
+roi_vis = nib.load(roi_vis)
+roi_vis_data = roi_vis.get_data()
+label = list(set(roi_vis_data[roi_vis_data.nonzero()]))
+roi_vis_data0 = np.zeros(roi_vis_data.shape)
+roi_vis_data0[roi_vis_data == label[0]] = 1.0
+roi_vis_data1 = np.zeros(roi_vis_data.shape)
+roi_vis_data1[roi_vis_data == label[1]] = 1.0
+roi_vis_data2 = np.zeros(roi_vis_data.shape)
+roi_vis_data2[roi_vis_data == label[2]] = 1.0
+roi_vis_data3 = np.zeros(roi_vis_data.shape)
+roi_vis_data3[roi_vis_data == label[3]] = 1.0
 
+ROI_vis_actor = actor.contour_from_roi(roi_vis_data0, affine=roi_vis.affine, color=(1., 1., 0.), opacity=0.8)
+ROI_vis_actor1 = actor.contour_from_roi(roi_vis_data1, affine=roi_vis.affine, color=(0., 1., 0.), opacity=0.8)
+ROI_vis_actor2 = actor.contour_from_roi(roi_vis_data2, affine=roi_vis.affine, color=(1., 0., 0.), opacity=0.8)
+ROI_vis_actor3 = actor.contour_from_roi(roi_vis_data3, affine=roi_vis.affine, color=(0., 0., 1.), opacity=0.8)
+##########################################################
+
+streamlines = select_by_vol_roi(streamlines, roi1_data, roi1.affine)
+print len(streamlines)
+# create a rendering renderer
+ren = window.Renderer()
+stream_actor = actor.line(streamlines)
+
+# print ROI_actor
+# print ROI_actor.GetBounds()
 vol = nib.load(vol_file)
 data = vol.get_data()
 shape = vol.shape
@@ -140,12 +173,20 @@ image_actor_y.display_extent(0,
 
 # assign actor to the renderer
 ren.add(stream_actor)
-ren.add(ROI_actor)
-ren.add(ROI_actor1)
+
+#########################################
+# ren.add(ROI_actor)
+# ren.add(ROI_actor1)
+ren.add(ROI_vis_actor)
+ren.add(ROI_vis_actor1)
+ren.add(ROI_vis_actor2)
+ren.add(ROI_vis_actor3)
+#########################################
+interactor_roi = [ROI_actor, ROI_actor1, ROI_vis_actor, ROI_vis_actor1, ROI_vis_actor2, ROI_vis_actor3]
 ren.add(image_actor_z)
 ren.add(image_actor_x)
 ren.add(image_actor_y)
-show_m = window.ShowManager(ren, size=(1200, 900), interactor_style=MouseInteractorStylePP(ren, [ROI_actor, ROI_actor1]))
+show_m = window.ShowManager(ren, size=(1200, 900), interactor_style=MouseInteractorStylePP(ren, interactor_roi))
 show_m.initialize()
 
 line_slider_z = ui.LineSlider2D(min_value=0,

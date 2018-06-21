@@ -16,9 +16,9 @@ fibselection = FibSelection(fasciculus)
 L_temp_need0 = fibselection.endpoint_dissimilarity()
 fasciculus.set_data(L_temp_need0)
 L_temp_need1 = fibselection.single_point_mid_sag()
-# fasciculus.set_data(L_temp_need1)
-# L_temp_need2 = fibselection.lr_rat()
-# fasciculus.set_data(L_temp_need2)
+fasciculus.set_data(L_temp_need1)
+L_temp_need2 = fibselection.lr_step()
+fasciculus.set_data(L_temp_need2)
 
 out_path = '/home/brain/workingdir/data/dwi/hcp/preprocessed/' \
            'response_dhollander/100408/result/result20vs45/Prob01_plenium_fib_vis_pure.tck'
