@@ -14,7 +14,7 @@ rh_white = '/home/brain/workingdir/data/dwi/hcp/preprocessed/' \
 geo_path = [lh_white, rh_white]
 
 l_labels = '/home/brain/workingdir/data/dwi/hcp/preprocessed/' \
-           'response_dhollander/100408/my_labels/native_lh_FFA.label'
+           'response_dhollander/100408/my_labels/native/native_lh_FFA.label'
 r_labels = '/home/brain/workingdir/data/dwi/hcp/preprocessed/' \
            'response_dhollander/100408/my_labels/native_rh_FFA.label'
 lr_labels_path = [l_labels, r_labels]

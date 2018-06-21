@@ -101,7 +101,7 @@ print len(streamlines)
 # create a rendering renderer
 ren = window.Renderer()
 stream_actor = actor.line(streamlines)
-stream_init_actor = actor.line(streamlines, (1.0, 0.0, 0.0))
+stream_init_actor = actor.line(streamlines, (0.0, 1.0, 0.0))
 vol = nib.load(vol_file)
 
 
@@ -451,6 +451,7 @@ def modify_button_callback(i_ren, obj, button):
     print button.current_icon_id
     print button.current_icon_name
     if button.current_icon_id == 0:
+        # ren.RemoveActor(stream_init_actor)
         sphereWidget.AddObserver("InteractionEvent", computeFibCallback)
     if button.current_icon_id == 1:
         ren.RemoveActor(stream_actor)
