@@ -140,6 +140,7 @@ def main():
         else:
             raise ValueError("must specify subject ID or ID file.")
 
+        runid = list()
         if args.run_file and args.run_id:
             with open(args.run_file, 'r') as run_f:
                 runid = run_f.readlines()
@@ -156,7 +157,7 @@ def main():
         if args.pipeline_name and args.sole_cmd:
             raise ValueError("-pipeline_name and -sole do not exist at same time!")
         elif args.pipeline_name and not args.sole_cmd:
-            with open(args.pipeline, 'r+') as f_p:
+            with open(args.pipeline_name, 'r+') as f_p:
                 pip_id = f_p.readlines()
                 pip_id = [_.strip() for _ in pip_id]
                 if args.append_cmd:
@@ -183,30 +184,30 @@ def main():
                 if args.exe_ord == 'sess':
                     for cmds in pip_id:
                         for sess in sessid:
-                            pre_subjects_path = os.path.join(args.sub_path, sess)
+                            pre_subjects_path = os.path.join(args.sesspar_path, sess)
                             subprocess.call(cmds.format(subjects_path_id=pre_subjects_path, run_id=run_id), shell=True)
                 if args.exe_ord == 'cmd':
                     for sess in sessid:
                         for cmds in pip_id:
-                            pre_subjects_path = os.path.join(args.sub_path, sess)
+                            pre_subjects_path = os.path.join(args.sesspar_path, sess)
                             subprocess.call(cmds.format(subjects_path_id=pre_subjects_path, run_id=run_id), shell=True)
         else:
             if args.exe_ord == 'sess':
                 for cmds in pip_id:
                     for sess in sessid:
-                        pre_subjects_path = os.path.join(args.sub_path, sess)
+                        pre_subjects_path = os.path.join(args.sesspar_path, sess)
                         subprocess.call(cmds.format(subjects_path_id=pre_subjects_path), shell=True)
             if args.exe_ord == 'cmd':
                 for sess in sessid:
                     for cmds in pip_id:
-                        pre_subjects_path = os.path.join(args.sub_path, sess)
+                        pre_subjects_path = os.path.join(args.sesspar_path, sess)
                         subprocess.call(cmds.format(subjects_path_id=pre_subjects_path), shell=True)
 
     if args.mode == 'edit':
         if args.pipeline_name and args.sole_cmd:
             raise ValueError("-pipeline_name and -sole do not exist at same time!")
         elif args.pipeline_name and not args.sole_cmd:
-            with open(args.pipeline, 'r+') as f_p:
+            with open(args.pipeline_name, 'r+') as f_p:
                 pip_id = f_p.readlines()
                 pip_id = [_.strip() for _ in pip_id]
                 if args.append_cmd:
