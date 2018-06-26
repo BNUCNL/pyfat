@@ -11,6 +11,7 @@ from email import encoders
 
 class Email(object):
     """
+    可用于周期性(定时年、月、日、时、分)给自己邮件进度报告。
     Python对SMTP支持有smtplib和email两个模块，email负责构造邮件，smtplib负责发送邮件。
     """
     def __init__(self, email_subject, email_from, to_addr_list):
