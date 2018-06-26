@@ -157,6 +157,9 @@ def main():
         if args.pipeline_name and args.sole_cmd:
             raise ValueError("-pipeline_name and -sole do not exist at same time!")
         elif args.pipeline_name and not args.sole_cmd:
+            if not os.path.exists(args.pipeline_name):
+                f = open(args.pipeline_name, 'w')
+                f.close()
             with open(args.pipeline_name, 'r+') as f_p:
                 pip_id = f_p.readlines()
                 pip_id = [_.strip() for _ in pip_id]
@@ -164,8 +167,8 @@ def main():
                     pip_id.append(args.append_cmd)
                 if args.insert_cmd:
                     pip_id.insert(int(args.insert_cmd[0]), args.insert_cmd[1])
-                if args.cmd_id:
-                    del pip_id[args.cmd_id]
+                if isinstance(args.cmd_id, int):
+                    pip_id.pop(args.cmd_id)
                 f_p.seek(0)
                 f_p.truncate()
                 # f_p.writelines(pip_id)
@@ -207,6 +210,9 @@ def main():
         if args.pipeline_name and args.sole_cmd:
             raise ValueError("-pipeline_name and -sole do not exist at same time!")
         elif args.pipeline_name and not args.sole_cmd:
+            if not os.path.exists(args.pipeline_name):
+                f = open(args.pipeline_name, 'w')
+                f.close()
             with open(args.pipeline_name, 'r+') as f_p:
                 pip_id = f_p.readlines()
                 pip_id = [_.strip() for _ in pip_id]
@@ -214,8 +220,8 @@ def main():
                     pip_id.append(args.append_cmd)
                 if args.insert_cmd:
                     pip_id.insert(int(args.insert_cmd[0]), args.insert_cmd[1])
-                if args.cmd_id:
-                    del pip_id[args.cmd_id]
+                if isinstance(args.cmd_id, int):
+                    pip_id.pop(args.cmd_id)
                 f_p.seek(0)
                 f_p.truncate()
                 # f_p.writelines(pip_id)
